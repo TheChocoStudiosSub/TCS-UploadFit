@@ -49,7 +49,7 @@ function applyLanguage() {
     if (value.includes('\n')) node.innerHTML = value.split('\n').map(part => escapeHtml(part)).join('<br>');
     else node.textContent = value;
   });
-  $('#page-title').setAttribute('aria-label', `${tr('headlineA')} ${tr('headlineB')}`);
+  $('#page-title').setAttribute('aria-label', tr('headlineA'));
   $('#dropzone').setAttribute('aria-label', tr('dropHeadline'));
   document.title = language === 'id' ? 'TCS UploadFit — Meja persiapan gambar' : 'TCS UploadFit — Image preparation bench';
   renderQueue();
