@@ -39,14 +39,19 @@ async function buildEdition(id) {
   const destination = path.join(outputRoot, id);
   await rm(destination, { recursive: true, force: true });
   await mkdir(destination, { recursive: true });
-  await cp(root, destination, {
-    recursive: true,
-    filter(source) {
-      const relative = path.relative(root, source).split(path.sep)[0];
-      return !['.git', '.github', 'node_modules', 'dist', 'scripts', 'tests'].includes(relative)
-        && !['package.json', 'package-lock.json', 'README.md', 'STORE-LISTING.md', 'LICENSE'].includes(relative);
-    }
-  });
+  // Copy individual files so the default dist output can safely live inside the source root.
+  const excludedTopLevel = new Set(['scripts', 'tests']);
+  const excludedFiles = new Set([
+    'package.json', 'package-lock.json', 'README.md', 'STORE-LISTING.md', 'LICENSE'
+  ]);
+  for (const sourceFile of await listSourceFiles(root)) {
+    const relative = path.relative(root, sourceFile);
+    const topLevel = relative.split(path.sep)[0];
+    if (excludedTopLevel.has(topLevel) || excludedFiles.has(relative)) continue;
+    const destinationFile = path.join(destination, relative);
+    await mkdir(path.dirname(destinationFile), { recursive: true });
+    await cp(sourceFile, destinationFile);
+  }
 
   const editionFile = path.join(destination, 'src/edition.js');
   let editionSource = await readFile(editionFile, 'utf8');

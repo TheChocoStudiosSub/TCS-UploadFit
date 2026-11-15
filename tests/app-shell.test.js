@@ -77,7 +77,8 @@ test('processing controls restore after errors and language changes refresh the 
 test('size behaviour offers maximum size and exact frame without a redundant enlargement toggle', () => {
   assert.ok(html.includes('data-target-mode="max"'));
   assert.ok(html.includes('data-target-mode="frame"'));
-  assert.match(html, /<div\\b(?=[^>]*\\bid="frame-mode-controls")(?=[^>]*\\shidden(?:\\s|>))[^>]*>/);
+  const frameModeControls = html.match(/<div\b(?=[^>]*\bid="frame-mode-controls")[^>]*>/)?.[0] || '';
+  assert.ok(/\shidden(?:\s|>)/.test(frameModeControls));
   assert.ok(!html.includes('id="no-upscale"'));
   assert.ok(app.includes("targetMode: $('.target-mode-button.active')"));
   assert.ok(processor.includes("targetMode === 'max'"));
@@ -86,6 +87,8 @@ test('size behaviour offers maximum size and exact frame without a redundant enl
 test('processing progress does not destroy the translated button label', () => {
   assert.ok(app.includes("$('#process-all').querySelector('[data-i18n=\"prepareAll\"]')"));
   assert.ok(app.includes("textContent = tr('prepareAll')"));
+  assert.ok(app.includes("const processButtonLabel = $('#process-all').querySelector('[data-i18n=\"prepareAll\"]')"));
+  assert.ok(!app.includes("$('#process-all').textContent = processing"));
 });
 
 test('custom presets are filtered through settings validation before use', () => {

@@ -19,6 +19,21 @@ test('edition limits are distinct and internally consistent', () => {
   assert.equal(EDITIONS.store.showDemoBadge, false);
 });
 
+test('build script supports an output directory nested inside the repository root', async () => {
+  const output = path.join(process.cwd(), 'dist', `uploadfit-nested-build-${process.pid}`);
+  try {
+    execFileSync(process.execPath, ['scripts/build.mjs', '--edition=demo', '--out', output], {
+      cwd: process.cwd(), stdio: 'pipe'
+    });
+    const buildInfo = JSON.parse(await readFile(path.join(output, 'demo', 'edition-build.json'), 'utf8'));
+    const html = await readFile(path.join(output, 'demo', 'index.html'), 'utf8');
+    assert.equal(buildInfo.edition, 'demo');
+    assert.ok(html.includes(EDITIONS.demo.title.en));
+  } finally {
+    await rm(output, { recursive: true, force: true });
+  }
+});
+
 test('build script produces independently configured demo and Store outputs', async () => {
   const output = await mkdtemp(path.join(os.tmpdir(), 'uploadfit-editions-'));
   try {

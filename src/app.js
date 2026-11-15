@@ -255,7 +255,8 @@ function renderQueue() {
 
   $('#queue-selected').textContent = selectedId ? String(Math.max(0, queue.findIndex(item => item.id === selectedId) + 1)).padStart(2, '0') : '';
   $('#download-all').disabled = !queue.some(item => item.result) || processing;
-  $('#process-all').textContent = processing ? tr('preparing') : tr('prepareAll');
+  const processButtonLabel = $('#process-all').querySelector('[data-i18n="prepareAll"]');
+  if (processButtonLabel) processButtonLabel.textContent = processing ? tr('preparing') : tr('prepareAll');
   updatePresetDeleteButton();
 }
 
