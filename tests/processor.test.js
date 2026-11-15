@@ -105,7 +105,7 @@ test('PNG, JPEG and WebP dimensions can be read from their file headers', async 
   assert.deepEqual(await readImageHeader(new Blob([png])), { mime: 'image/png', width: 10000, height: 6000 });
   assert.ok(10000 * 6000 > MAX_IMAGE_PIXELS);
 
-  const jpeg = new Uint8Array([0xff,0xd8,0xff,0xc0,0x00,0x11,0x08,0x03,0x20,0x04,0x00,0,0,0,0,0,0,0,0xff,0xd9]);
+  const jpeg = new Uint8Array([0xff,0xd8,0xff,0xc0,0x00,0x11,0x08,0x03,0x20,0x04,0x00,0,0,0,0,0,0,0,0,0,0,0xff,0xd9]);
   assert.deepEqual(await readImageHeader(new Blob([jpeg])), { mime: 'image/jpeg', width: 1024, height: 800 });
 
   const webp = new Uint8Array(30);
