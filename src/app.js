@@ -1,7 +1,9 @@
-import { formatBytes, formatDimensions, processImage } from './processor.js';
+import { formatBytes, formatDimensions, normalizeSettings, processImage } from './processor.js';
 import { createZip } from './zip.js';
 import { translate } from './i18n.js';
 import { EDITION } from './edition.js';
+import { validateIncomingFiles } from './file-validation.js';
+import { filterValidPresets } from './presets.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -58,10 +60,12 @@ function applyLanguage() {
   document.title = EDITION.title[language] || EDITION.title.en;
   const description = $('meta[name="description"]');
   if (description) description.content = EDITION.description[language] || EDITION.description.en;
-  $('[data-edition-badge]').forEach(node => {
+  $$('[data-edition-badge]').forEach(node => {
     node.hidden = !EDITION.showDemoBadge;
     node.textContent = EDITION.badgeText;
   });
+  updateModeNote();
+  updatePresetDeleteButton();
   renderQueue();
   renderSelected();
 }
@@ -126,7 +130,9 @@ function updateModeNote() {
 
 function updateFormatControls() {
   const format = $('#format-select').value;
-  $('#max-size').max = $('#size-unit').value === 'MB' ? '100' : '102400';
+  $('#max-size').max = String($('#size-unit').value === 'MB'
+    ? MAX_BATCH_RESULT_BYTES / (1024 * 1024)
+    : MAX_BATCH_RESULT_BYTES / 1024);
   $('#quality-block').hidden = format === 'image/png';
   $('#background-block').hidden = format !== 'image/jpeg';
 }
@@ -154,32 +160,32 @@ function addFiles(fileList) {
   if (processing) return;
   const incoming = [...(fileList || [])];
   if (!incoming.length) return;
-  let added = 0;
-  let skipped = 0;
-  for (const file of incoming) {
-    const supported = file.type.startsWith('image/') || /\.(jpe?g|png|webp|bmp|avif)$/i.test(file.name || '');
-    const extensionSupported = /\.(jpe?g|png|webp|bmp|avif)$/i.test(file.name || '');
-    const mimeSupported = ['image/jpeg','image/png','image/webp','image/bmp','image/avif'].includes(file.type);
-    if (!supported || (!mimeSupported && !extensionSupported) || file.size === 0 || file.size > MAX_INPUT_BYTES || queue.length >= MAX_QUEUE) {
-      skipped += 1;
-      continue;
-    }
+  const { accepted, skipped } = validateIncomingFiles(
+    incoming, queue.map(item => item.file), MAX_QUEUE, MAX_INPUT_BYTES
+  );
+  for (const file of accepted) {
     const sourceUrl = URL.createObjectURL(file);
     queue.push({ id: newId(), file, sourceUrl, outputUrl: null, status: 'queued', result: null, error: null });
-    added += 1;
   }
   if (!selectedId && queue.length) selectedId = queue[0].id;
   renderQueue();
   renderSelected();
-  if (added) showToast(tr('added', { count: added }), 'success');
-  if (skipped) showToast(tr('invalidFiles'), 'error');
+  if (accepted.length) showToast(tr('added', { count: accepted.length }), 'success');
+  if (Object.values(skipped).some(count => count > 0)) showToast(tr('fileSkippedSummary', skipped), 'error');
 }
+
 
 function renderQueue() {
   const list = $('#queue-list');
   list.replaceChildren();
   $('#queue-count').textContent = String(queue.length).padStart(2, '0');
-  $('#queue-summary').textContent = queue.length ? `${queue.filter(item => item.status === 'done').length} / ${queue.length} ${language === 'id' ? 'siap' : 'prepared'}` : tr('queueEmpty');
+  const preparedCount = queue.filter(item => item.status === 'done').length;
+  $('#queue-summary').textContent = queue.length
+    ? tr('queueSummary', { prepared: preparedCount, total: queue.length })
+    : tr('queueEmpty');
+  $('#queue-status').textContent = queue.length
+    ? tr('queueSummary', { prepared: preparedCount, total: queue.length })
+    : tr('queueEmpty');
   $('#clear-files').disabled = !queue.length || processing;
   $('#process-all').disabled = !queue.some(item => item.status !== 'done') || processing;
   $('#browse-files').disabled = processing;
@@ -188,21 +194,19 @@ function renderQueue() {
   $('#dropzone').setAttribute('aria-disabled', String(processing));
   $('#cancel-process').hidden = !processing;
 
-  if (!queue.length) {
-    const empty = document.createElement('li');
-    empty.className = 'queue-empty';
-    // Keep the queue empty; do not show instructional filler in the list.
-  } else {
+  if (queue.length) {
     queue.forEach((item, index) => {
       const row = document.createElement('li');
       row.className = `queue-row${item.id === selectedId ? ' selected' : ''}`;
-      row.tabIndex = 0;
-      row.setAttribute('role', 'button');
-      row.setAttribute('aria-pressed', String(item.id === selectedId));
-      row.addEventListener('click', () => selectItem(item.id));
-      row.addEventListener('keydown', event => {
-        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectItem(item.id); }
-      });
+      const choose = document.createElement('button');
+      choose.type = 'button';
+      choose.className = 'queue-select';
+      choose.setAttribute('aria-pressed', String(item.id === selectedId));
+      choose.setAttribute('aria-label', tr('selectQueueItem', {
+        name: item.file.name,
+        selected: item.id === selectedId ? tr('selected') : ''
+      }));
+      choose.addEventListener('click', () => selectItem(item.id));
 
       const source = document.createElement('span');
       source.className = 'file-source';
@@ -235,14 +239,16 @@ function renderQueue() {
       remove.disabled = processing;
       remove.addEventListener('click', event => { event.stopPropagation(); removeItem(item.id); });
 
-      row.append(source, size, status, remove);
+      choose.append(source, size, status);
+      row.append(choose, remove);
       list.append(row);
     });
   }
 
   $('#queue-selected').textContent = selectedId ? String(Math.max(0, queue.findIndex(item => item.id === selectedId) + 1)).padStart(2, '0') : '';
   $('#download-all').disabled = !queue.some(item => item.result) || processing;
-  $('#process-all').textContent = processing ? (language === 'id' ? 'SEDANG MEMPROSES…' : 'PREPARING…') : tr('prepareAll');
+  $('#process-all').textContent = processing ? tr('preparing') : tr('prepareAll');
+  updatePresetDeleteButton();
 }
 
 function selectItem(id) {
@@ -316,7 +322,11 @@ function renderSelected() {
           from: formatDimensions(item.result.sourceWidth, item.result.sourceHeight),
           to: formatDimensions(item.result.width, item.result.height)
         })
-      : item.result.warning || `${formatDimensions(item.result.width, item.result.height)} · ${delta >= 0 ? `${delta.toFixed(1)}% smaller` : `${Math.abs(delta).toFixed(1)}% larger`} than source`;
+      : item.result.warning || tr('reductionSummary', {
+          dimensions: formatDimensions(item.result.width, item.result.height),
+          percent: Math.abs(delta).toFixed(1),
+          direction: delta >= 0 ? tr('smaller') : tr('larger')
+        });
   } else {
     outputImage.hidden = true;
     outputImage.removeAttribute('src');
@@ -352,7 +362,7 @@ function abortError() {
 
 function processImageInWorker(file, settings, signal) {
   if (typeof Worker !== 'function' || typeof OffscreenCanvas !== 'function') {
-    return processImage(file, settings, { signal });
+    return processImage(file, settings, { signal, language });
   }
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -386,11 +396,11 @@ function processImageInWorker(file, settings, signal) {
         finish();
         reject(new Error(event.message || tr('imageError')));
       };
-      worker.postMessage({ file, settings });
+      worker.postMessage({ file, settings, language });
     } catch (error) {
       finish();
       if (error?.name === 'AbortError') reject(error);
-      else processImage(file, settings, { signal }).then(resolve, reject);
+      else processImage(file, settings, { signal, language }).then(resolve, reject);
     }
   });
 }
@@ -408,7 +418,12 @@ async function processQueue() {
   if (!queue.length) { showToast(tr('noFiles'), 'error'); return; }
 
   let settings;
-  try { settings = readSettings(); } catch (error) { showToast(error.message, 'error'); return; }
+  try {
+    settings = { ...normalizeSettings(readSettings(), language), _normalized: true };
+  } catch (error) {
+    showToast(error.message || tr('invalidSettings'), 'error');
+    return;
+  }
 
   processing = true;
   cancelRequested = false;
@@ -418,7 +433,7 @@ async function processQueue() {
   let failed = 0;
   const pending = queue.filter(item => item.status !== 'done');
   controls.forEach(selector => { $(selector).disabled = true; });
-  $('.mode-button').forEach(button => { button.disabled = true; });
+  $$('.mode-button').forEach(button => { button.disabled = true; });
   $('#cancel-process').hidden = false;
   $('#cancel-process').disabled = false;
 
@@ -467,14 +482,14 @@ async function processQueue() {
     processController = null;
     processing = false;
     controls.forEach(selector => { $(selector).disabled = false; });
-    $('.mode-button').forEach(button => { button.disabled = false; });
+    $$('.mode-button').forEach(button => { button.disabled = false; });
     $('#cancel-process').hidden = true;
     $('#cancel-process').disabled = true;
     try {
       renderQueue();
       renderSelected();
     } catch (error) {
-      console.error('Unable to refresh the image queue after processing.', error);
+      console.error(tr('queueRefreshFailed'), error);
     }
   }
 
@@ -504,13 +519,13 @@ async function exportBatch() {
       const count = (counts.get(base) || 0) + 1;
       counts.set(base, count);
       const name = count === 1 ? base : base.replace(/(\.[^.]+)$/i, ` (${count})$1`);
-      return { name, blob: item.result.blob };
+      return { name, blob: item.result.blob, lastModified: item.file.lastModified };
     });
-    const archive = await createZip(entries);
+    const archive = await createZip(entries, { language });
     downloadBlob(archive, 'TCS-UploadFit-Export.zip');
     showToast(tr('zipSaved'), 'success');
   } catch (error) {
-    showToast(`${tr('presetNotSupported')} ${error.message || ''}`, 'error');
+    showToast(error?.message || tr('zipNotSupported'), 'error');
   } finally {
     button.textContent = previousText;
     renderQueue();
@@ -520,7 +535,7 @@ async function exportBatch() {
 function readCustomPresets() {
   try {
     const parsed = JSON.parse(storageGet(STORAGE.presets) || '[]');
-    return Array.isArray(parsed) ? parsed.filter(item => item && typeof item.name === 'string' && item.settings && typeof item.settings === 'object').slice(0, 30) : [];
+    return filterValidPresets(parsed, settings => normalizeSettings(settings, language), 30);
   } catch {
     return [];
   }
@@ -528,7 +543,7 @@ function readCustomPresets() {
 
 let customPresets = readCustomPresets();
 function persistPresets() {
-  if (!storageSet(STORAGE.presets, JSON.stringify(customPresets))) showToast(language === 'id' ? 'Penyimpanan lokal penuh atau tidak tersedia.' : 'Local storage is full or unavailable.', 'error');
+  if (!storageSet(STORAGE.presets, JSON.stringify(customPresets))) showToast(tr('storageUnavailable'), 'error');
 }
 
 function applySelectedPreset() {
@@ -538,8 +553,19 @@ function applySelectedPreset() {
     return;
   }
   const preset = customPresets.find(item => item.id === id);
-  if (preset) writeSettings(preset.settings);
-  else writeSettings(DEFAULT_SETTINGS);
+  if (preset) {
+    try {
+      normalizeSettings(preset.settings, language);
+      writeSettings(preset.settings);
+    } catch {
+      customPresets = customPresets.filter(item => item.id !== preset.id);
+      persistPresets();
+      refreshPresetOptions();
+      $('#preset-select').value = 'custom';
+      showToast(tr('invalidPreset'), 'error');
+    }
+  } else writeSettings(DEFAULT_SETTINGS);
+  updatePresetDeleteButton();
 }
 
 function refreshPresetOptions() {
@@ -551,11 +577,28 @@ function refreshPresetOptions() {
     const option = document.createElement('option');
     option.className = 'custom-preset-option';
     option.value = preset.id;
-    option.textContent = `LOCAL · ${preset.name}`;
+    option.textContent = tr('customPresetOption', { name: preset.name });
     select.append(option);
   });
   if (current === 'custom' || BUILT_IN[current] || previousCustom.includes(current)) select.value = current;
   else select.value = 'custom';
+  updatePresetDeleteButton();
+}
+
+function updatePresetDeleteButton() {
+  const selected = $('#preset-select')?.value;
+  $('#delete-preset').disabled = processing || !customPresets.some(preset => preset.id === selected);
+}
+
+function deleteSelectedPreset() {
+  const selected = $('#preset-select').value;
+  if (!customPresets.some(item => item.id === selected)) return;
+  customPresets = customPresets.filter(item => item.id !== selected);
+  persistPresets();
+  refreshPresetOptions();
+  $('#preset-select').value = 'custom';
+  updatePresetDeleteButton();
+  showToast(tr('presetDeleted'), 'success');
 }
 
 function commitPreset(event) {
@@ -564,10 +607,18 @@ function commitPreset(event) {
   if (!name) { showToast(tr('presetNameRequired'), 'error'); return; }
   if (customPresets.some(item => item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) { showToast(tr('presetNameExists'), 'error'); return; }
   if (customPresets.length >= 30) { showToast(tr('presetLimit'), 'error'); return; }
-  customPresets.push({ id: `recipe-${newId()}`, name, settings: readSettings() });
+  const settings = readSettings();
+  try {
+    normalizeSettings(settings, language);
+  } catch (error) {
+    showToast(error.message || tr('invalidSettings'), 'error');
+    return;
+  }
+  customPresets.push({ id: `recipe-${newId()}`, name, settings });
   persistPresets();
   refreshPresetOptions();
   $('#preset-select').value = customPresets.at(-1).id;
+  updatePresetDeleteButton();
   $('#preset-dialog').close();
   $('#preset-name').value = '';
   showToast(tr('presetSaved'), 'success');
@@ -591,6 +642,7 @@ function handleSettingsEvents() {
     settingsChanged();
   }));
   $('#preset-select').addEventListener('change', applySelectedPreset);
+  $('#delete-preset').addEventListener('click', deleteSelectedPreset);
   $('#size-unit').addEventListener('change', () => {
     const nextUnit = $('#size-unit').value;
     const sizeInput = $('#max-size');
@@ -623,9 +675,6 @@ function handleFileEvents() {
   $('#dropzone').addEventListener('click', event => {
     if (processing || event.target.closest('button')) return;
     $('#file-input').click();
-  });
-  $('#dropzone').addEventListener('keydown', event => {
-    if ((event.key === 'Enter' || event.key === ' ') && !processing) { event.preventDefault(); $('#file-input').click(); }
   });
   $('#file-input').addEventListener('change', event => {
     addFiles(event.target.files);

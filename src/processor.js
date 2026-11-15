@@ -1,4 +1,7 @@
 import { EDITION, formatEditionBytes } from './edition.js';
+import { translate } from './i18n.js';
+
+const message = (key, language, vars) => translate(key, language, vars);
 
 const SUPPORTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/avif']);
 const SUPPORTED_EXTENSIONS = /\.(jpe?g|png|webp|bmp|avif)$/i;
@@ -26,53 +29,60 @@ export function formatDimensions(width, height) {
     : '—';
 }
 
-function positiveInteger(value, label) {
+function positiveInteger(value, label, language) {
   if (value === '' || value === null || value === undefined) return null;
-  if (!/^\d+$/.test(String(value).trim())) throw new Error(`${label} must contain digits only.`);
+  if (!/^\d+$/.test(String(value).trim())) {
+    throw new Error(message(label === 'Width' ? 'widthDigits' : 'heightDigits', language));
+  }
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > MAX_OUTPUT_EDGE) {
-    throw new Error(`${label} must be a whole number between 1 and ${MAX_OUTPUT_EDGE.toLocaleString()} pixels.`);
+    throw new Error(message(label === 'Width' ? 'widthRange' : 'heightRange', language, {
+      maxEdge: MAX_OUTPUT_EDGE.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')
+    }));
   }
   return parsed;
 }
 
-export function normalizeSettings(raw = {}) {
-  const width = positiveInteger(raw.width, 'Width');
-  const height = positiveInteger(raw.height, 'Height');
-  const rawMaxSize = raw.maxSize === '' || raw.maxSize === null || raw.maxSize === undefined ? null : String(raw.maxSize).trim();
-  if (rawMaxSize !== null && !/^\d+(?:\.\d+)?$/.test(rawMaxSize)) throw new Error('File-size limit must be a positive number.');
+export function normalizeSettings(raw = {}, language = 'en') {
+  if (raw?._normalized === true) return raw;
+  const width = positiveInteger(raw.width, 'Width', language);
+  const height = positiveInteger(raw.height, 'Height', language);
+  const rawMaxSize = raw.maxSize === '' || raw.maxSize === null || raw.maxSize === undefined
+    ? null
+    : String(raw.maxSize).trim();
+  if (rawMaxSize !== null && !/^\d+(?:\.\d+)?$/.test(rawMaxSize)) {
+    throw new Error(message('sizePositive', language));
+  }
   const maxSizeValue = rawMaxSize === null ? null : Number(rawMaxSize);
   const isMegabytes = raw.sizeUnit === 'MB';
-  const unitMaximum = isMegabytes ? 100 : 102400;
+  const unitMaximum = isMegabytes
+    ? EDITION.maxBatchOutputBytes / (1024 * 1024)
+    : EDITION.maxBatchOutputBytes / 1024;
   if (maxSizeValue !== null && (!Number.isFinite(maxSizeValue) || maxSizeValue <= 0 || maxSizeValue > unitMaximum)) {
-    throw new Error(isMegabytes
-      ? 'File-size limit must be greater than 0 and no more than 100 MB.'
-      : 'File-size limit must be greater than 0 and no more than 102,400 KB (100 MB).');
+    throw new Error(message(isMegabytes ? 'sizeMaxMB' : 'sizeMaxKB', language, {
+      maxSize: unitMaximum.toLocaleString(language === 'id' ? 'id-ID' : 'en-US')
+    }));
   }
   const sizeUnit = isMegabytes ? 1024 * 1024 : 1024;
   const maxBytes = maxSizeValue === null ? null : Math.max(1, Math.round(maxSizeValue * sizeUnit));
   const format = raw.format || 'image/jpeg';
   if (!['original', 'image/jpeg', 'image/png', 'image/webp'].includes(format)) {
-    throw new Error('Choose JPEG, PNG, WebP, or keep the source format.');
+    throw new Error(message('formatChoice', language));
   }
   const mode = raw.mode || 'fit';
-  if (!['fit', 'fill', 'stretch'].includes(mode)) throw new Error('Choose a supported frame mode.');
+  if (!['fit', 'fill', 'stretch'].includes(mode)) throw new Error(message('modeChoice', language));
   const qualityInput = raw.quality === '' || raw.quality === null || raw.quality === undefined
     ? 86
     : Number(raw.quality);
-  const quality = Math.min(100, Math.max(65, Number.isFinite(qualityInput) ? qualityInput : 86)) / 100;
+  const quality = Math.min(100, Math.max(MIN_LOSSY_QUALITY * 100, Number.isFinite(qualityInput) ? qualityInput : 86)) / 100;
   const background = /^#[\da-f]{6}$/i.test(raw.background || '') ? raw.background : '#f4f0e7';
 
   return {
-    width,
-    height,
-    maxBytes,
-    format,
-    quality,
-    mode,
+    width, height, maxBytes, format, quality, mode,
     preserveRatio: raw.preserveRatio !== false,
     noUpscale: raw.noUpscale !== false,
-    background
+    background,
+    _normalized: true
   };
 }
 
@@ -194,26 +204,30 @@ export async function readImageHeader(file) {
   return null;
 }
 
-function throwIfAborted(signal) {
+function throwIfAborted(signal, language = 'en') {
   if (!signal?.aborted) return;
-  const error = new Error('Image processing was cancelled.');
+  const error = new Error(message('processingCancelled', language));
   error.name = 'AbortError';
   throw error;
 }
 
-function canvasToBlob(canvas, mime, quality) {
+function canvasToBlob(canvas, mime, quality, language = 'en') {
   if (typeof canvas.convertToBlob === 'function') {
     return canvas.convertToBlob({ type: mime, quality }).then(blob => {
-      if (!blob) throw new Error('The image could not be exported. Try another format or smaller dimensions.');
-      if (blob.type !== mime) throw new Error(`${mime.replace('image/', '').toUpperCase()} export is unavailable in this browser.`);
+      if (!blob) throw new Error(message('exportFailed', language));
+      if (blob.type !== mime) throw new Error(message('formatUnavailable', language, {
+        format: mime.replace('image/', '').toUpperCase()
+      }));
       return blob;
     });
   }
   return new Promise((resolve, reject) => {
     try {
       canvas.toBlob(blob => {
-        if (!blob) return reject(new Error('The image could not be exported. Try another format or smaller dimensions.'));
-        if (blob.type !== mime) return reject(new Error(`${mime.replace('image/', '').toUpperCase()} export is unavailable in this browser.`));
+        if (!blob) return reject(new Error(message('exportFailed', language)));
+        if (blob.type !== mime) return reject(new Error(message('formatUnavailable', language, {
+          format: mime.replace('image/', '').toUpperCase()
+        })));
         resolve(blob);
       }, mime, quality);
     } catch (error) {
@@ -222,19 +236,19 @@ function canvasToBlob(canvas, mime, quality) {
   });
 }
 
-function createCanvas(width, height) {
+function createCanvas(width, height, language = 'en') {
   if (typeof OffscreenCanvas === 'function') return new OffscreenCanvas(width, height);
-  if (typeof document === 'undefined') throw new Error('Canvas rendering is unavailable in this browser.');
+  if (typeof document === 'undefined') throw new Error(message('canvasUnavailable', language));
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   return canvas;
 }
 
-function renderToCanvas(bitmap, target, mime, background) {
-  const canvas = createCanvas(target.width, target.height);
+function renderToCanvas(bitmap, target, mime, background, language = 'en') {
+  const canvas = createCanvas(target.width, target.height, language);
   const context = canvas.getContext('2d', { alpha: mime !== 'image/jpeg' });
-  if (!context) throw new Error('Canvas rendering is unavailable in this browser.');
+  if (!context) throw new Error(message('canvasUnavailable', language));
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
   if (mime === 'image/jpeg') {
@@ -251,10 +265,10 @@ function renderToCanvas(bitmap, target, mime, background) {
   return canvas;
 }
 
-export async function encodeWithinLimit(canvas, mime, requestedQuality, maxBytes, { signal } = {}) {
+export async function encodeWithinLimit(canvas, mime, requestedQuality, maxBytes, { signal, language = 'en' } = {}) {
   const quality = Math.min(1, Math.max(MIN_LOSSY_QUALITY, requestedQuality));
-  const initial = await canvasToBlob(canvas, mime, quality);
-  throwIfAborted(signal);
+  const initial = await canvasToBlob(canvas, mime, quality, language);
+  throwIfAborted(signal, language);
   if (!maxBytes || initial.size <= maxBytes || mime === 'image/png') {
     return { blob: initial, quality, metLimit: !maxBytes || initial.size <= maxBytes };
   }
@@ -265,12 +279,11 @@ export async function encodeWithinLimit(canvas, mime, requestedQuality, maxBytes
   let bestQuality = quality;
   let lowestSizeBlob = initial;
 
-  // A short bounded search finds the highest acceptable quality above the floor.
   for (let attempt = 0; attempt < 6 && high - low > 0.005; attempt += 1) {
-    throwIfAborted(signal);
+    throwIfAborted(signal, language);
     const candidateQuality = (low + high) / 2;
-    const candidate = await canvasToBlob(canvas, mime, candidateQuality);
-    throwIfAborted(signal);
+    const candidate = await canvasToBlob(canvas, mime, candidateQuality, language);
+    throwIfAborted(signal, language);
     if (candidate.size < lowestSizeBlob.size) lowestSizeBlob = candidate;
     if (candidate.size <= maxBytes) {
       bestUnderLimit = candidate;
@@ -283,11 +296,10 @@ export async function encodeWithinLimit(canvas, mime, requestedQuality, maxBytes
 
   if (bestUnderLimit) return { blob: bestUnderLimit, quality: bestQuality, metLimit: true };
 
-  // Try the quality floor once. If it still misses, processImage reduces dimensions.
   if (quality > MIN_LOSSY_QUALITY) {
-    throwIfAborted(signal);
-    const minimum = await canvasToBlob(canvas, mime, MIN_LOSSY_QUALITY);
-    throwIfAborted(signal);
+    throwIfAborted(signal, language);
+    const minimum = await canvasToBlob(canvas, mime, MIN_LOSSY_QUALITY, language);
+    throwIfAborted(signal, language);
     if (minimum.size <= maxBytes) return { blob: minimum, quality: MIN_LOSSY_QUALITY, metLimit: true };
     if (minimum.size < lowestSizeBlob.size) lowestSizeBlob = minimum;
   }
@@ -299,35 +311,39 @@ function mimeFromExtension(name) {
   return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', bmp: 'image/bmp', avif: 'image/avif' })[extension] || '';
 }
 
-export async function processImage(file, rawSettings, { signal } = {}) {
-  const settings = normalizeSettings(rawSettings);
-  if (!(file instanceof Blob)) throw new Error('The selected item is not a readable file.');
-  if (file.size === 0) throw new Error('This file is empty.');
-  if (file.size > MAX_FILE_BYTES) throw new Error(`This file exceeds the ${formatEditionBytes(MAX_FILE_BYTES)} per-image limit.`);
+export async function processImage(file, rawSettings, { signal, language = 'en' } = {}) {
+  const settings = rawSettings?._normalized === true ? rawSettings : normalizeSettings(rawSettings, language);
+  if (!(file instanceof Blob)) throw new Error(message('fileUnreadable', language));
+  if (file.size === 0) throw new Error(message('fileEmpty', language));
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error(message('fileTooLarge', language, { maxSize: formatEditionBytes(MAX_FILE_BYTES, language) }));
+  }
   const extensionMime = mimeFromExtension(file.name);
   if (!SUPPORTED_MIME_TYPES.has(file.type) && !SUPPORTED_MIME_TYPES.has(extensionMime) && !SUPPORTED_EXTENSIONS.test(file.name || '')) {
-    throw new Error('Unsupported format. Use JPEG, PNG, WebP, BMP or AVIF. Animated GIF and SVG are not supported.');
+    throw new Error(message('unsupportedFormat', language));
   }
-  if (typeof createImageBitmap !== 'function') throw new Error('This browser cannot decode images locally. Update Microsoft Edge or use a supported browser.');
+  if (typeof createImageBitmap !== 'function') throw new Error(message('decodeUnsupported', language));
 
-  throwIfAborted(signal);
+  throwIfAborted(signal, language);
   const header = await readImageHeader(file);
-  throwIfAborted(signal);
+  throwIfAborted(signal, language);
   if (header?.width && header?.height && header.width * header.height > MAX_IMAGE_PIXELS) {
-    throw new Error('This image exceeds the 50-megapixel safety limit.');
+    throw new Error(message('megapixelLimit', language, { maxPixels: MAX_IMAGE_PIXELS / 1_000_000 }));
   }
 
   let bitmap;
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
-    throw new Error('The image could not be decoded. It may be damaged or use an unsupported encoding.');
+    throw new Error(message('decodeFailed', language));
   }
 
   try {
-    throwIfAborted(signal);
-    if (!bitmap.width || !bitmap.height) throw new Error('Image dimensions could not be read.');
-    if (bitmap.width * bitmap.height > MAX_IMAGE_PIXELS) throw new Error('This image exceeds the 50-megapixel safety limit.');
+    throwIfAborted(signal, language);
+    if (!bitmap.width || !bitmap.height) throw new Error(message('dimensionsUnreadable', language));
+    if (bitmap.width * bitmap.height > MAX_IMAGE_PIXELS) {
+      throw new Error(message('megapixelLimit', language, { maxPixels: MAX_IMAGE_PIXELS / 1_000_000 }));
+    }
 
     const mime = settings.format === 'original'
       ? (['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ? file.type
@@ -338,22 +354,21 @@ export async function processImage(file, rawSettings, { signal } = {}) {
 
     let target = calculateTarget(bitmap.width, bitmap.height, settings);
     if (target.width * target.height > MAX_IMAGE_PIXELS) {
-      throw new Error('The requested output frame exceeds the 50-megapixel safety limit. Reduce the dimensions.');
+      throw new Error(message('outputPixelLimit', language, { maxPixels: MAX_IMAGE_PIXELS / 1_000_000 }));
     }
-    let canvas = renderToCanvas(bitmap, target, mime, settings.background);
-    let encoded = await encodeWithinLimit(canvas, mime, settings.quality, settings.maxBytes, { signal });
+    let canvas = renderToCanvas(bitmap, target, mime, settings.background, language);
+    let encoded = await encodeWithinLimit(canvas, mime, settings.quality, settings.maxBytes, { signal, language });
 
-    // When only a file-size ceiling is set, preserve the source first, then step down resolution.
     if (!encoded.metLimit && settings.maxBytes && !settings.width && !settings.height && mime !== 'image/png') {
       let width = target.width;
       let height = target.height;
       for (let pass = 0; pass < 18 && !encoded.metLimit && Math.max(width, height) > 256; pass += 1) {
-        throwIfAborted(signal);
+        throwIfAborted(signal, language);
         width = Math.max(1, Math.floor(width * 0.88));
         height = Math.max(1, Math.floor(height * 0.88));
         target = { width, height, draw: { x: 0, y: 0, width, height } };
-        canvas = renderToCanvas(bitmap, target, mime, settings.background);
-        encoded = await encodeWithinLimit(canvas, mime, settings.quality, settings.maxBytes, { signal });
+        canvas = renderToCanvas(bitmap, target, mime, settings.background, language);
+        encoded = await encodeWithinLimit(canvas, mime, settings.quality, settings.maxBytes, { signal, language });
       }
     }
 
@@ -371,10 +386,10 @@ export async function processImage(file, rawSettings, { signal } = {}) {
     const warning = encoded.metLimit
       ? null
       : mime === 'image/png'
-        ? 'The PNG is lossless. Its requested size limit could not be reached; use JPEG/WebP or reduce the dimensions.'
+        ? message('pngLimitMissed', language)
         : downscaled
-          ? 'The size limit could not be reached even after reducing the image resolution.'
-          : 'The size limit could not be reached at the requested dimensions. Reduce the frame or choose another format.';
+          ? message('sizeLimitAfterDownscale', language)
+          : message('sizeLimitFixed', language);
 
     return {
       blob: encoded.blob,

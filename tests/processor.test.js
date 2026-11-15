@@ -20,12 +20,13 @@ test('normalizes valid settings and converts a KB ceiling to bytes', () => {
   assert.equal(result.height, null);
   assert.equal(result.maxBytes, 512000);
   assert.equal(result.quality, 0.86);
+  assert.equal(result._normalized, true);
 });
 
 test('rejects invalid or excessive pixel dimensions', () => {
   assert.throws(() => normalizeSettings({ ...base, width: '0' }), /between 1 and 16,000/);
   assert.throws(() => normalizeSettings({ ...base, width: '16001' }), /between 1 and 16,000/);
-  assert.throws(() => normalizeSettings({ ...base, maxSize: '101', sizeUnit: 'MB' }), /no more than 100 MB/);
+  assert.throws(() => normalizeSettings({ ...base, maxSize: '51', sizeUnit: 'MB' }), /no more than 50 MB/);
 });
 
 test('fit returns an exact frame without cropping the source', () => {
@@ -208,6 +209,11 @@ test('drawImage coordinates and dimensions are integers', async () => {
 });
 
 test('non-decimal numeric strings are rejected and empty quality uses the default', () => {
+  assert.throws(() => normalizeSettings({ ...base, width: '0x10' }), /digits only/);
+  assert.equal(normalizeSettings({ ...base, quality: '' }).quality, 0.86);
+});
+
+test('rejects hexadecimal dimensions and defaults an empty quality to 86 percent', () => {
   assert.throws(() => normalizeSettings({ ...base, width: '0x10' }), /digits only/);
   assert.equal(normalizeSettings({ ...base, quality: '' }).quality, 0.86);
 });
