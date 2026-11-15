@@ -16,13 +16,13 @@ const STORAGE = {
 
 const DEFAULT_SETTINGS = Object.freeze({
   width: '', height: '', maxSize: '', sizeUnit: 'MB', format: 'image/jpeg', quality: 86,
-  mode: 'fit', preserveRatio: true, noUpscale: true, background: '#f4f0e7'
+  targetMode: 'max', mode: 'fit', background: '#f4f0e7'
 });
 
 const BUILT_IN = {
-  email: { width: '', height: '', maxSize: '1', sizeUnit: 'MB', format: 'image/jpeg', quality: 82, mode: 'fit', preserveRatio: true, noUpscale: true, background: '#ffffff' },
-  web: { width: '1600', height: '', maxSize: '500', sizeUnit: 'KB', format: 'image/webp', quality: 82, mode: 'fit', preserveRatio: true, noUpscale: true, background: '#ffffff' },
-  catalog: { width: '2000', height: '2000', maxSize: '2', sizeUnit: 'MB', format: 'image/jpeg', quality: 88, mode: 'fit', preserveRatio: true, noUpscale: true, background: '#ffffff' }
+  email: { width: '', height: '', maxSize: '1', sizeUnit: 'MB', format: 'image/jpeg', quality: 82, targetMode: 'max', mode: 'fit', background: '#ffffff' },
+  web: { width: '1600', height: '', maxSize: '500', sizeUnit: 'KB', format: 'image/webp', quality: 82, targetMode: 'max', mode: 'fit', background: '#ffffff' },
+  catalog: { width: '2000', height: '2000', maxSize: '2', sizeUnit: 'MB', format: 'image/jpeg', quality: 88, targetMode: 'frame', mode: 'fit', background: '#ffffff' }
 };
 
 function storageGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
@@ -93,9 +93,8 @@ function readSettings() {
     sizeUnit: $('#size-unit').value,
     format: $('#format-select').value,
     quality: Number($('#quality-range').value),
+    targetMode: $('.target-mode-button.active')?.dataset.targetMode || 'max',
     mode: $('.mode-button.active')?.dataset.mode || 'fit',
-    preserveRatio: true,
-    noUpscale: $('#no-upscale').checked,
     background: $('#background-color').value
   };
 }
@@ -110,9 +109,13 @@ function writeSettings(settings) {
   $('#format-select').value = value.format || 'image/jpeg';
   $('#quality-range').value = String(value.quality ?? 86);
   $('#quality-value').textContent = `${value.quality ?? 86}%`;
-  $('#no-upscale').checked = value.noUpscale !== false;
   $('#background-color').value = value.background || '#f4f0e7';
-  $$('.mode-button').forEach(button => {
+  $('.target-mode-button').forEach(button => {
+    const active = button.dataset.targetMode === (value.targetMode || (settings.mode ? 'frame' : 'max'));
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  $('.mode-button').forEach(button => {
     const active = button.dataset.mode === (value.mode || 'fit');
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
@@ -123,6 +126,10 @@ function writeSettings(settings) {
 }
 
 function updateModeNote() {
+  const targetMode = $('.target-mode-button.active')?.dataset.targetMode || 'max';
+  $('#frame-mode-controls').hidden = targetMode !== 'frame';
+  $('#target-note').textContent = tr(targetMode === 'max' ? 'maxModeNote' : 'exactModeNote');
+  if (targetMode !== 'frame') return;
   const mode = $('.mode-button.active')?.dataset.mode || 'fit';
   const key = mode === 'fill' ? 'fillNote' : mode === 'stretch' ? 'stretchNote' : 'fitNote';
   $('#mode-note').textContent = tr(key);
@@ -318,10 +325,10 @@ function renderSelected() {
     $('#proof-readout').querySelector('span').textContent = item.result.metLimit ? tr('limitMet') : tr('limitMissed');
     const delta = item.result.reduction;
     readout.textContent = item.result.downscaled
-      ? tr('resolutionDownscaled', {
+      ? [tr('resolutionDownscaled', {
           from: formatDimensions(item.result.sourceWidth, item.result.sourceHeight),
           to: formatDimensions(item.result.width, item.result.height)
-        })
+        }), item.result.warning].filter(Boolean).join(' ')
       : item.result.warning || tr('reductionSummary', {
           dimensions: formatDimensions(item.result.width, item.result.height),
           percent: Math.abs(delta).toFixed(1),
@@ -428,12 +435,12 @@ async function processQueue() {
   processing = true;
   cancelRequested = false;
   processController = new AbortController();
-  const controls = ['#width-input','#height-input','#max-size','#size-unit','#format-select','#quality-range','#no-upscale','#background-color','#preset-select','#reset-settings','#save-preset'];
+  const controls = ['#width-input','#height-input','#max-size','#size-unit','#format-select','#quality-range','#background-color','#preset-select','#reset-settings','#save-preset'];
   let completed = 0;
   let failed = 0;
   const pending = queue.filter(item => item.status !== 'done');
   controls.forEach(selector => { $(selector).disabled = true; });
-  $$('.mode-button').forEach(button => { button.disabled = true; });
+  $('.mode-button, .target-mode-button').forEach(button => { button.disabled = true; });
   $('#cancel-process').hidden = false;
   $('#cancel-process').disabled = false;
 
@@ -482,7 +489,7 @@ async function processQueue() {
     processController = null;
     processing = false;
     controls.forEach(selector => { $(selector).disabled = false; });
-    $$('.mode-button').forEach(button => { button.disabled = false; });
+    $('.mode-button, .target-mode-button').forEach(button => { button.disabled = false; });
     $('#cancel-process').hidden = true;
     $('#cancel-process').disabled = true;
     try {
@@ -625,15 +632,24 @@ function commitPreset(event) {
 }
 
 function handleSettingsEvents() {
-  ['#width-input','#height-input','#max-size','#format-select','#no-upscale','#background-color'].forEach(selector => {
+  ['#width-input','#height-input','#max-size','#format-select','#background-color'].forEach(selector => {
     $(selector).addEventListener('change', settingsChanged);
   });
   $('#quality-range').addEventListener('input', () => {
     $('#quality-value').textContent = `${$('#quality-range').value}%`;
     settingsChanged();
   });
-  $$('.mode-button').forEach(button => button.addEventListener('click', () => {
-    $$('.mode-button').forEach(choice => {
+  $('.target-mode-button').forEach(button => button.addEventListener('click', () => {
+    $('.target-mode-button').forEach(choice => {
+      const active = choice === button;
+      choice.classList.toggle('active', active);
+      choice.setAttribute('aria-pressed', String(active));
+    });
+    updateModeNote();
+    settingsChanged();
+  }));
+  $('.mode-button').forEach(button => button.addEventListener('click', () => {
+    $('.mode-button').forEach(choice => {
       const active = choice === button;
       choice.classList.toggle('active', active);
       choice.setAttribute('aria-pressed', String(active));

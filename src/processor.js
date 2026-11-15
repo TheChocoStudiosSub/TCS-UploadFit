@@ -69,6 +69,8 @@ export function normalizeSettings(raw = {}, language = 'en') {
   if (!['original', 'image/jpeg', 'image/png', 'image/webp'].includes(format)) {
     throw new Error(message('formatChoice', language));
   }
+  const legacyTargetMode = raw.targetMode === undefined ? (raw.mode ? 'frame' : 'max') : raw.targetMode;
+  if (!['max', 'frame'].includes(legacyTargetMode)) throw new Error(message('targetModeChoice', language));
   const mode = raw.mode || 'fit';
   if (!['fit', 'fill', 'stretch'].includes(mode)) throw new Error(message('modeChoice', language));
   const qualityInput = raw.quality === '' || raw.quality === null || raw.quality === undefined
@@ -78,16 +80,14 @@ export function normalizeSettings(raw = {}, language = 'en') {
   const background = /^#[\da-f]{6}$/i.test(raw.background || '') ? raw.background : '#f4f0e7';
 
   return {
-    width, height, maxBytes, format, quality, mode,
-    preserveRatio: raw.preserveRatio !== false,
-    noUpscale: raw.noUpscale !== false,
+    width, height, maxBytes, format, quality, targetMode: legacyTargetMode, mode,
     background,
     _normalized: true
   };
 }
 
 export function calculateTarget(sourceWidth, sourceHeight, settings) {
-  const { width: requestedWidth, height: requestedHeight, noUpscale, mode } = settings;
+  const { width: requestedWidth, height: requestedHeight, targetMode = 'frame', mode = 'fit' } = settings;
   if (!requestedWidth && !requestedHeight) {
     return {
       width: sourceWidth,
@@ -96,42 +96,33 @@ export function calculateTarget(sourceWidth, sourceHeight, settings) {
     };
   }
 
-  const onlyOneSide = Boolean(requestedWidth) !== Boolean(requestedHeight);
+  if (targetMode === 'max') {
+    const scale = Math.min(
+      requestedWidth ? requestedWidth / sourceWidth : Infinity,
+      requestedHeight ? requestedHeight / sourceHeight : Infinity,
+      1
+    );
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    return { width, height, draw: { x: 0, y: 0, width, height } };
+  }
+
   const targetWidth = requestedWidth || Math.max(1, Math.round(sourceWidth * (requestedHeight / sourceHeight)));
   const targetHeight = requestedHeight || Math.max(1, Math.round(sourceHeight * (requestedWidth / sourceWidth)));
 
-  if (onlyOneSide) {
-    const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight, noUpscale ? 1 : Infinity);
-    const outWidth = Math.max(1, Math.round(sourceWidth * scale));
-    const outHeight = Math.max(1, Math.round(sourceHeight * scale));
-    return { width: outWidth, height: outHeight, draw: { x: 0, y: 0, width: outWidth, height: outHeight } };
-  }
-
-  if (mode === 'stretch' || !settings.preserveRatio) {
-    const outWidth = noUpscale ? Math.min(sourceWidth, targetWidth) : targetWidth;
-    const outHeight = noUpscale ? Math.min(sourceHeight, targetHeight) : targetHeight;
-    return { width: outWidth, height: outHeight, draw: { x: 0, y: 0, width: outWidth, height: outHeight } };
+  if (mode === 'stretch') {
+    return {
+      width: targetWidth,
+      height: targetHeight,
+      draw: { x: 0, y: 0, width: targetWidth, height: targetHeight }
+    };
   }
 
   const scaleX = targetWidth / sourceWidth;
   const scaleY = targetHeight / sourceHeight;
-  let scale = mode === 'fill' ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
-  if (noUpscale) scale = Math.min(1, scale);
+  const scale = mode === 'fill' ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
   const drawWidth = sourceWidth * scale;
   const drawHeight = sourceHeight * scale;
-
-  if (mode === 'fill') {
-    return {
-      width: targetWidth,
-      height: targetHeight,
-      draw: {
-        x: (targetWidth - drawWidth) / 2,
-        y: (targetHeight - drawHeight) / 2,
-        width: drawWidth,
-        height: drawHeight
-      }
-    };
-  }
 
   return {
     width: targetWidth,

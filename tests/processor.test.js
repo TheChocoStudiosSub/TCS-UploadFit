@@ -4,7 +4,7 @@ import { calculateTarget, encodeWithinLimit, formatBytes, formatDimensions, norm
 
 const base = {
   width: '', height: '', maxSize: '', sizeUnit: 'MB', format: 'image/jpeg', quality: 86,
-  mode: 'fit', preserveRatio: true, noUpscale: true, background: '#f4f0e7'
+  targetMode: 'frame', mode: 'fit', background: '#f4f0e7'
 };
 
 test('formats byte counts without changing their units unexpectedly', () => {
@@ -55,13 +55,30 @@ test('a single target side preserves the original aspect ratio', () => {
   assert.equal(result.height, 900);
 });
 
-test('no-upscale prevents increasing a source smaller than its requested frame', () => {
-  const settings = normalizeSettings({ ...base, width: '1600', height: '1200', mode: 'fit', noUpscale: true });
+test('maximum size mode shrinks proportionally and adds no empty canvas', () => {
+  const settings = normalizeSettings({ ...base, width: '1000', height: '1000', targetMode: 'max' });
+  const result = calculateTarget(4000, 3000, settings);
+  assert.deepEqual([result.width, result.height], [1000, 750]);
+  assert.deepEqual(result.draw, { x: 0, y: 0, width: 1000, height: 750 });
+});
+
+test('maximum size mode never enlarges a smaller source', () => {
+  const settings = normalizeSettings({ ...base, width: '1600', height: '1200', targetMode: 'max' });
   const result = calculateTarget(800, 600, settings);
-  assert.equal(result.width, 1600);
-  assert.equal(result.height, 1200);
-  assert.equal(result.draw.width, 800);
-  assert.equal(result.draw.height, 600);
+  assert.deepEqual([result.width, result.height], [800, 600]);
+});
+
+test('maximum size mode handles extreme aspect ratios and one-sided bounds', () => {
+  const oneSide = calculateTarget(4000, 3000, normalizeSettings({ ...base, width: '1200', targetMode: 'max' }));
+  assert.deepEqual([oneSide.width, oneSide.height], [1200, 900]);
+  const extreme = calculateTarget(20000, 10, normalizeSettings({ ...base, width: '16000', height: '1000', targetMode: 'max' }));
+  assert.deepEqual([extreme.width, extreme.height], [16000, 8]);
+  assert.ok(extreme.width * extreme.height <= MAX_IMAGE_PIXELS);
+});
+
+test('legacy saved settings without a target mode retain exact-frame behaviour', () => {
+  const settings = normalizeSettings({ ...base, targetMode: undefined });
+  assert.equal(settings.targetMode, 'frame');
 });
 
 test('stretch explicitly maps source pixels to the requested frame', () => {

@@ -17,7 +17,7 @@
     <header class="masthead">
       <a class="brand" href="#top" aria-label="TCS UploadFit home">
         <span class="brand-symbol" aria-hidden="true">
-          <svg viewBox="0 0 512 512" focusable="false" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="38" stroke-linecap="square" stroke-linejoin="round"><path d="M94 128v151c0 69 39 108 94 108s94-39 94-108V128"/><path d="M310 384V128h111M310 246h92"/></g></svg>
+          <svg viewBox="0 0 512 512" focusable="false" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="28" stroke-linecap="square" stroke-linejoin="round"><path d="M112 190v-78h78M322 112h78v78M112 322v78h78M322 400h78v-78"/></g><g fill="none" stroke="#c2895b" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"><path d="M256 328V202M202 256l54-54 54 54M204 346h104"/></g></svg>
         </span>
         <span class="brand-wordmark"><span class="brand-overline">THE CHOCO STUDIOS</span><strong>TCS UploadFit</strong></span>
       </a>
@@ -55,11 +55,16 @@
             <div class="dimension-cross" aria-hidden="true">×</div>
             <div class="field-block"><label for="height-input" data-i18n="height">Height</label><div class="number-shell"><input id="height-input" type="number" min="1" max="16000" inputmode="numeric" placeholder="Auto"><span>PX</span></div></div>
           </div>
-          <div class="option-line">
-            <label class="check-control"><input id="no-upscale" type="checkbox" checked><span data-i18n="noUpscale">Do not enlarge</span></label>
+          <div class="field-block target-mode-block">
+            <span class="field-label" data-i18n="targetMode">Size behaviour</span>
+            <div class="mode-switch target-mode-switch" role="group" aria-label="Size behaviour">
+              <button type="button" data-target-mode="max" class="target-mode-button active" aria-pressed="true"><b data-i18n="maxMode">Maximum size</b></button>
+              <button type="button" data-target-mode="frame" class="target-mode-button" aria-pressed="false"><b data-i18n="exactMode">Exact frame</b></button>
+            </div>
+            <p class="field-note" id="target-note" data-i18n="maxModeNote">Fit within the entered width and height. The image only gets smaller; no empty canvas is added.</p>
           </div>
-          <div class="field-block mode-block">
-            <span class="field-label" data-i18n="frameMode">When both sides are set</span>
+          <div id="frame-mode-controls" class="field-block mode-block" hidden>
+            <span class="field-label" data-i18n="frameMode">Inside the exact frame</span>
             <div class="mode-switch" role="group" aria-label="Frame mode">
               <button type="button" data-mode="fit" class="mode-button active" aria-pressed="true"><b data-i18n="fitMode">FIT</b></button>
               <button type="button" data-mode="fill" class="mode-button" aria-pressed="false"><b data-i18n="fillMode">CROP</b></button>

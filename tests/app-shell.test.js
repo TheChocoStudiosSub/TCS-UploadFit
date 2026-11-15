@@ -74,6 +74,15 @@ test('processing controls restore after errors and language changes refresh the 
   assert.match(app, /normalizeSettings\(readSettings\(\), language\)/);
 });
 
+test('size behaviour offers maximum size and exact frame without a redundant enlargement toggle', () => {
+  assert.ok(html.includes('data-target-mode="max"'));
+  assert.ok(html.includes('data-target-mode="frame"'));
+  assert.ok(html.includes('id="frame-mode-controls" hidden'));
+  assert.ok(!html.includes('id="no-upscale"'));
+  assert.ok(app.includes("targetMode: $('.target-mode-button.active')"));
+  assert.ok(processor.includes("targetMode === 'max'"));
+});
+
 test('custom presets are filtered through settings validation before use', () => {
   assert.match(app, /filterValidPresets\(parsed, settings => normalizeSettings\(settings, language\), 30\)/);
   assert.ok(app.includes('function deleteSelectedPreset()'));

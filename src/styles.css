@@ -46,7 +46,15 @@ a{color:inherit}
 .check-control{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--ink);cursor:pointer}
 .check-control input{width:14px;height:14px;margin:0;accent-color:var(--ink)}
 .check-mark{display:none}
+.target-mode-block{margin-top:15px}
+.target-mode-switch{grid-template-columns:repeat(2,1fr)}
+.target-mode-button{display:flex;align-items:center;justify-content:center;background:var(--surface);border:0;border-right:1px solid var(--line);padding:11px 8px;text-align:center}
+.target-mode-button:last-child{border-right:0}
+.target-mode-button b{font-size:10px;font-weight:600}
+.target-mode-button.active{background:#e9ebed;color:var(--ink)}
+.target-mode-button:focus-visible{outline:2px solid var(--ink);outline-offset:-3px}
 .mode-block{margin-top:17px}
+.mode-block[hidden]{display:none}
 .mode-switch{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .mode-button{display:flex;align-items:center;justify-content:center;background:var(--surface);border:0;border-right:1px solid var(--line);padding:9px 6px;text-align:center}
 .mode-button:last-child{border-right:0}
@@ -168,7 +176,7 @@ a{color:inherit}
 .app-frame{padding:0 24px}.workbench{grid-template-columns:285px minmax(0,1fr);gap:22px}.recipe-column{padding-right:18px}.production-grid{grid-template-columns:minmax(0,1fr)}.jobs-panel{border-right:0;border-bottom:1px solid var(--line);padding:15px 0}.proof-panel{padding:15px 0}.proof-view{min-height:210px}.image-window{height:145px}
 }
 @media(max-width:760px){
-.app-frame{padding:0 17px}.masthead{min-height:68px}.masthead-meta{gap:12px}.meta-code{display:none}.intro-strip{padding:27px 0 24px}.intro-copy h1{font-size:clamp(28px,7vw,40px)}.intro-copy p{font-size:12px;max-width:430px}.workbench{display:flex;flex-direction:column;gap:22px;padding-top:20px}.recipe-column{border-right:0;border-bottom:1px solid var(--line);padding:0 0 20px;display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.column-title,.recipe-foot{grid-column:1/-1}.dimension-row,.option-line,.mode-block,.recipe-rule{grid-column:1/-1}.field-block{margin-top:13px}.recipe-foot{margin-top:16px}.production-grid{grid-template-columns:1fr}.intake-label{font-size:10px;flex-wrap:wrap}.intake-accepted{font-size:9px}.dropzone{align-items:flex-start;flex-direction:column;gap:12px;padding:18px 15px 34px;min-height:142px}.drop-copy strong{font-size:15px}.drop-copy span{font-size:11px}.browse-button{padding:9px 11px}.drop-foot{left:15px;right:15px;font-size:8px}.proof-panel{padding-top:15px}.site-footer{flex-wrap:wrap;padding:13px 0;font-size:8px}.site-footer nav{gap:13px}.site-footer>span:last-child{width:100%;order:3}
+.app-frame{padding:0 17px}.masthead{min-height:68px}.masthead-meta{gap:12px}.meta-code{display:none}.intro-strip{padding:27px 0 24px}.intro-copy h1{font-size:clamp(28px,7vw,40px)}.intro-copy p{font-size:12px;max-width:430px}.workbench{display:flex;flex-direction:column;gap:22px;padding-top:20px}.recipe-column{border-right:0;border-bottom:1px solid var(--line);padding:0 0 20px;display:grid;grid-template-columns:1fr 1fr;column-gap:18px}.column-title,.recipe-foot{grid-column:1/-1}.dimension-row,.target-mode-block,.mode-block,.recipe-rule{grid-column:1/-1}.field-block{margin-top:13px}.recipe-foot{margin-top:16px}.production-grid{grid-template-columns:1fr}.intake-label{font-size:10px;flex-wrap:wrap}.intake-accepted{font-size:9px}.dropzone{align-items:flex-start;flex-direction:column;gap:12px;padding:18px 15px 34px;min-height:142px}.drop-copy strong{font-size:15px}.drop-copy span{font-size:11px}.browse-button{padding:9px 11px}.drop-foot{left:15px;right:15px;font-size:8px}.proof-panel{padding-top:15px}.site-footer{flex-wrap:wrap;padding:13px 0;font-size:8px}.site-footer nav{gap:13px}.site-footer>span:last-child{width:100%;order:3}
 }
 @media(max-width:470px){
 .app-frame{padding:0 12px}.brand-wordmark strong{font-size:17px}.brand-overline{font-size:9px}.ready-light{font-size:9px}.language-picker{padding-left:9px}.recipe-column{grid-template-columns:1fr 1fr;column-gap:13px}.option-line{gap:11px}.check-control{font-size:10px}.queue-head{grid-template-columns:minmax(0,1fr) 54px 63px 45px;gap:5px}
