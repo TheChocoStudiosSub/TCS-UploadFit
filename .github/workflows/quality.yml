@@ -1,0 +1,30 @@
+name: Quality checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run tests
+        run: npm test
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/app.js
+          node --check src/processor.js
+          node --check src/zip.js
+          node --check src/i18n.js
+          node --check sw.js
