@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171916">
-  <meta name="description" content="Prepare image files for real upload limits. Resize, convert and compress locally with TCS UploadFit.">
+  <meta name="description" content="Demo TCS UploadFit: prepare and preview images locally with limited public-demo capacity.">
   <meta name="application-name" content="TCS UploadFit">
   <meta name="color-scheme" content="light">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/src/styles.css">
-  <title>TCS UploadFit — Image preparation bench</title>
+  <title>TCS UploadFit — Demo TCS</title>
 </head>
 <body>
   <div class="app-frame">
@@ -22,7 +22,7 @@
         <span class="brand-wordmark"><span class="brand-overline">THE CHOCO STUDIOS / UTILITY 001</span><strong>UPLOAD<span>FIT</span></strong></span>
       </a>
       <div class="masthead-meta">
-        <span class="meta-code">IMAGE PREPARATION SYSTEM</span>
+        <span class="meta-code">TCS DEMO / PUBLIC PREVIEW</span>
         <span class="ready-light"><i></i><span data-i18n="localReady">LOCAL PROCESSING READY</span></span>
         <label class="language-picker"><span class="sr-only" data-i18n="language">Language</span><select id="language-select" aria-label="Language"><option value="en">EN</option><option value="id">ID</option></select></label>
       </div>
@@ -111,7 +111,7 @@
               <div class="drop-illustration" aria-hidden="true"><span class="frame-back"></span><span class="frame-front"><i></i><b>+</b></span></div>
               <div class="drop-copy"><strong data-i18n="dropHeadline">Put the files on the table.</strong><span data-i18n="dropSubhead">Drop images here, or browse from your device.</span></div>
               <button id="browse-files" class="browse-button" type="button"><span data-i18n="browseFiles">BROWSE FILES</span><span>↗</span></button>
-              <div class="drop-foot"><span data-i18n="fileRules">Up to 100 images · 100 MB each · processed one at a time</span><span>01—100</span></div>
+              <div class="drop-foot"><span data-i18n="fileRules">Up to 5 images · 10 MB each · 50 MB total output</span><span>01—05</span></div>
             </div>
           </div>
 
@@ -154,7 +154,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><span>© 2026 THE CHOCO STUDIOS</span><nav><a href="/privacy.html" data-i18n="privacy">PRIVACY</a><a href="/terms.html" data-i18n="terms">TERMS</a><a href="mailto:thechocostudio@gmail.com" data-i18n="support">SUPPORT</a></nav><span data-i18n="footerTag">MADE FOR THE LAST MILE BEFORE UPLOAD.</span></footer>
+    <footer class="site-footer"><span>© 2026 THE CHOCO STUDIOS</span><nav><a href="https://tcs-uploadfit.vercel.app/" target="_blank" rel="noopener noreferrer" data-i18n="demoLink">DEMO TCS</a><a href="/privacy.html" data-i18n="privacy">PRIVACY</a><a href="/terms.html" data-i18n="terms">TERMS</a><a href="mailto:thechocostudio@gmail.com" data-i18n="support">SUPPORT</a></nav><span data-i18n="footerTag">MADE FOR THE LAST MILE BEFORE UPLOAD.</span></footer>
   </div>
 
   <dialog id="preset-dialog" class="preset-dialog">

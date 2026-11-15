@@ -4,7 +4,8 @@ import { translate } from './i18n.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const MAX_QUEUE = 100;
+const MAX_QUEUE = 5;
+const MAX_INPUT_BYTES = 10 * 1024 * 1024;
 const STORAGE = {
   language: 'tcs-uploadfit-language-v1',
   presets: 'tcs-uploadfit-recipes-v1'
@@ -30,7 +31,7 @@ let selectedId = null;
 let processing = false;
 let toastTimer = null;
 let previousSizeUnit = 'MB';
-const MAX_BATCH_RESULT_BYTES = 256 * 1024 * 1024;
+const MAX_BATCH_RESULT_BYTES = 50 * 1024 * 1024;
 
 function tr(key, vars) { return translate(key, language, vars); }
 function newId() { return crypto.randomUUID ? crypto.randomUUID() : `uf-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
@@ -149,7 +150,7 @@ function addFiles(fileList) {
     const supported = file.type.startsWith('image/') || /\.(jpe?g|png|webp|bmp|avif)$/i.test(file.name || '');
     const extensionSupported = /\.(jpe?g|png|webp|bmp|avif)$/i.test(file.name || '');
     const mimeSupported = ['image/jpeg','image/png','image/webp','image/bmp','image/avif'].includes(file.type);
-    if (!supported || (!mimeSupported && !extensionSupported) || file.size === 0 || file.size > 100 * 1024 * 1024 || queue.length >= MAX_QUEUE) {
+    if (!supported || (!mimeSupported && !extensionSupported) || file.size === 0 || file.size > MAX_INPUT_BYTES || queue.length >= MAX_QUEUE) {
       skipped += 1;
       continue;
     }

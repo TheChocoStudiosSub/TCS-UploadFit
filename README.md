@@ -10,6 +10,12 @@
 - **Honest validation:** the app checks format, pixel dimensions and file size; it does not certify image content or guarantee acceptance by a destination.
 - **Low operating cost:** no account, cloud processing, paid API, analytics SDK or advertising SDK is required.
 
+## Public demo
+
+The Vercel deployment is a limited public demonstration, not the unrestricted production release. The demo accepts up to **5 images per session**, **10 MB per input image**, and **50 MB of prepared output per batch**. These caps keep the public preview predictable on shared hosting and ordinary devices.
+
+[Open Demo TCS](https://tcs-uploadfit.vercel.app/)
+
 ## Features
 
 - Resize using width, height or an exact two-sided frame.
@@ -17,7 +23,7 @@
 - JPEG, PNG and WebP output.
 - Quality tuning for lossy formats.
 - File-size targeting with explicit pass/fail feedback.
-- Sequential batch processing for up to 100 images, with a 256 MB aggregate prepared-output safety cap.
+- Sequential batch processing for up to 5 images in the public demo, with a 50 MB aggregate prepared-output cap.
 - Before/after proof with actual dimensions and byte counts.
 - ZIP export for completed batches.
 - Local custom recipes and English/Indonesian interface.
@@ -25,7 +31,7 @@
 
 ## Supported inputs and limits
 
-JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. Maximum input size is 100 MB per image; maximum decoded and output dimensions are 50 megapixels. A batch retains up to 256 MB of prepared output in memory, and one ZIP archive is limited to 256 MB. Some formats depend on browser support.
+JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. The public demo accepts input files up to 10 MB each and retains up to 50 MB of prepared output per batch. Maximum decoded and output dimensions are 50 megapixels. The underlying ZIP writer has a 256 MB safety ceiling, but the demo's lower batch cap applies first. Some formats depend on browser support.
 
 ## Run locally
 
