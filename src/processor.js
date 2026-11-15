@@ -1,6 +1,8 @@
+import { EDITION, formatEditionBytes } from './edition.js';
+
 const SUPPORTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/avif']);
 const SUPPORTED_EXTENSIONS = /\.(jpe?g|png|webp|bmp|avif)$/i;
-export const MAX_FILE_BYTES = 100 * 1024 * 1024;
+export const MAX_FILE_BYTES = EDITION.maxInputBytes;
 export const MAX_IMAGE_PIXELS = 50_000_000;
 export const MAX_OUTPUT_EDGE = 16_000;
 
@@ -195,7 +197,7 @@ export async function processImage(file, rawSettings) {
   const settings = normalizeSettings(rawSettings);
   if (!(file instanceof Blob)) throw new Error('The selected item is not a readable file.');
   if (file.size === 0) throw new Error('This file is empty.');
-  if (file.size > MAX_FILE_BYTES) throw new Error('This file exceeds the 100 MB per-image limit.');
+  if (file.size > MAX_FILE_BYTES) throw new Error(`This file exceeds the ${formatEditionBytes(MAX_FILE_BYTES)} per-image limit.`);
   if (!SUPPORTED_MIME_TYPES.has(file.type) && !SUPPORTED_EXTENSIONS.test(file.name || '')) {
     throw new Error('Unsupported format. Use JPEG, PNG, WebP, BMP or AVIF. Animated GIF and SVG are not supported.');
   }

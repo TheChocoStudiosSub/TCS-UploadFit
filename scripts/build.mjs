@@ -1,0 +1,87 @@
+import { createHash } from 'node:crypto';
+import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const requestedEdition = process.argv.find(arg => arg.startsWith('--edition='))?.split('=')[1] || null;
+const outIndex = process.argv.indexOf('--out');
+const outputRoot = outIndex >= 0 && process.argv[outIndex + 1]
+  ? path.resolve(process.argv[outIndex + 1])
+  : path.join(root, 'dist');
+
+const { EDITIONS } = await import(pathToFileURL(path.join(root, 'src/edition.js')).href);
+const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const editionIds = requestedEdition ? [requestedEdition] : Object.keys(EDITIONS);
+if (editionIds.some(id => !EDITIONS[id])) throw new Error(`Unknown edition: ${requestedEdition}`);
+
+async function listSourceFiles(directory, base = directory) {
+  const found = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (base === root && ['.git', '.github', 'node_modules', 'dist'].includes(entry.name)) continue;
+    const full = path.join(directory, entry.name);
+    if (entry.isDirectory()) found.push(...await listSourceFiles(full, base));
+    else found.push(full);
+  }
+  return found;
+}
+
+const digest = createHash('sha256');
+for (const file of (await listSourceFiles(root)).sort()) {
+  digest.update(path.relative(root, file));
+  digest.update(await readFile(file));
+}
+const sourceHash = digest.digest('hex').slice(0, 12);
+const version = packageJson.version || '0.0.0';
+
+async function buildEdition(id) {
+  const edition = EDITIONS[id];
+  const destination = path.join(outputRoot, id);
+  await rm(destination, { recursive: true, force: true });
+  await mkdir(destination, { recursive: true });
+  await cp(root, destination, {
+    recursive: true,
+    filter(source) {
+      const relative = path.relative(root, source).split(path.sep)[0];
+      return !['.git', '.github', 'node_modules', 'dist', 'scripts', 'tests'].includes(relative)
+        && !['package.json', 'package-lock.json', 'README.md', 'STORE-LISTING.md', 'LICENSE'].includes(relative);
+    }
+  });
+
+  const editionFile = path.join(destination, 'src/edition.js');
+  let editionSource = await readFile(editionFile, 'utf8');
+  editionSource = editionSource.replace(
+    "export const ACTIVE_EDITION = 'demo';",
+    `export const ACTIVE_EDITION = '${id}';`
+  );
+  if (!editionSource.includes(`export const ACTIVE_EDITION = '${id}';`)) {
+    throw new Error(`Could not select the ${id} edition.`);
+  }
+  await writeFile(editionFile, editionSource);
+
+  const indexFile = path.join(destination, 'index.html');
+  let html = await readFile(indexFile, 'utf8');
+  html = html.replace('__EDITION_TITLE__', edition.title.en);
+  html = html.replace('__EDITION_DESCRIPTION__', edition.description.en);
+  if (html.includes('__EDITION_')) throw new Error('An edition placeholder was not replaced.');
+  await writeFile(indexFile, html);
+
+  const workerFile = path.join(destination, 'sw.js');
+  let worker = await readFile(workerFile, 'utf8');
+  const cacheVersion = `${id}-v${version}-${sourceHash}`;
+  worker = worker.replace('__CACHE_VERSION__', cacheVersion);
+  if (worker.includes('__CACHE_VERSION__')) throw new Error('Service-worker cache version was not injected.');
+  await writeFile(workerFile, worker);
+
+  await writeFile(path.join(destination, 'edition-build.json'), JSON.stringify({
+    edition: id,
+    version,
+    sourceHash,
+    maxImages: edition.maxImages,
+    maxInputBytes: edition.maxInputBytes,
+    maxBatchOutputBytes: edition.maxBatchOutputBytes
+  }, null, 2) + '\n');
+  console.log(`Built ${id}: ${edition.maxImages} images, ${edition.maxInputBytes} bytes/input, ${edition.maxBatchOutputBytes} bytes/output (${sourceHash}).`);
+}
+
+for (const id of editionIds) await buildEdition(id);

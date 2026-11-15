@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "serve": "python -m http.server 8080"
+    "serve": "python -m http.server 8080",
+    "build": "node scripts/build.mjs",
+    "build:demo": "node scripts/build.mjs --edition=demo",
+    "build:store": "node scripts/build.mjs --edition=store"
   },
   "engines": {
     "node": ">=20"

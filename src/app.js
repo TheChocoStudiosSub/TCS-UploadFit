@@ -1,11 +1,12 @@
 import { formatBytes, formatDimensions, processImage } from './processor.js';
 import { createZip } from './zip.js';
 import { translate } from './i18n.js';
+import { EDITION } from './edition.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const MAX_QUEUE = 5;
-const MAX_INPUT_BYTES = 10 * 1024 * 1024;
+const MAX_QUEUE = EDITION.maxImages;
+const MAX_INPUT_BYTES = EDITION.maxInputBytes;
 const STORAGE = {
   language: 'tcs-uploadfit-language-v1',
   presets: 'tcs-uploadfit-recipes-v1'
@@ -31,7 +32,7 @@ let selectedId = null;
 let processing = false;
 let toastTimer = null;
 let previousSizeUnit = 'MB';
-const MAX_BATCH_RESULT_BYTES = 50 * 1024 * 1024;
+const MAX_BATCH_RESULT_BYTES = EDITION.maxBatchOutputBytes;
 
 function tr(key, vars) { return translate(key, language, vars); }
 function newId() { return crypto.randomUUID ? crypto.randomUUID() : `uf-${Date.now()}-${Math.random().toString(16).slice(2)}`; }
@@ -51,7 +52,13 @@ function applyLanguage() {
   });
   $('#page-title').setAttribute('aria-label', tr('headlineA'));
   $('#dropzone').setAttribute('aria-label', tr('dropHeadline'));
-  document.title = language === 'id' ? 'TCS UploadFit — Meja persiapan gambar' : 'TCS UploadFit — Image preparation bench';
+  document.title = EDITION.title[language] || EDITION.title.en;
+  const description = $('meta[name="description"]');
+  if (description) description.content = EDITION.description[language] || EDITION.description.en;
+  $('[data-edition-badge]').forEach(node => {
+    node.hidden = !EDITION.showDemoBadge;
+    node.textContent = EDITION.badgeText;
+  });
   renderQueue();
   renderSelected();
 }

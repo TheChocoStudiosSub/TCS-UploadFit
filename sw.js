@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tcs-uploadfit-shell-1.0.0';
+const CACHE_NAME = 'tcs-uploadfit-shell-__CACHE_VERSION__';
 const SHELL_FILES = [
   '/',
   '/index.html',

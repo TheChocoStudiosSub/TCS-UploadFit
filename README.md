@@ -14,7 +14,7 @@
 
 ## Public demo
 
-The Vercel deployment is a limited public demonstration, not the unrestricted production release. The demo accepts up to **5 images per session**, **10 MB per input image**, and **50 MB of prepared output per batch**. These caps keep the public preview predictable on shared hosting and ordinary devices.
+The public demo is built from `src/edition.js`: **5 images**, **10 MB per input image**, and **50 MB of prepared output per batch**. The Store build uses **10 images**, **20 MB per input image**, and **80 MB of prepared output per batch**. `npm run build` creates both editions from one configuration; `npm run build:demo` creates the public demo output.
 
 [Open Demo TCS](https://tcs-uploadfit.vercel.app/)
 
@@ -33,7 +33,11 @@ The Vercel deployment is a limited public demonstration, not the unrestricted pr
 
 ## Supported inputs and limits
 
-JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. The public demo accepts input files up to 10 MB each and retains up to 50 MB of prepared output per batch. Maximum decoded and output dimensions are 50 megapixels. The underlying ZIP writer has a 256 MB safety ceiling, but the demo's lower batch cap applies first. Some formats depend on browser support.
+JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. The demo accepts inputs up to 10 MB each and 50 MB of prepared output per batch. The Store edition accepts inputs up to 20 MB each and 80 MB of prepared output per batch. Maximum decoded and output dimensions are 50 megapixels. The underlying ZIP writer has a 256 MB safety ceiling, but the demo's lower batch cap applies first. Some formats depend on browser support.
+
+## Build editions
+
+Run `npm run build` with Node.js 20 or newer to generate `dist/demo` and `dist/store`. `npm run build:demo` generates the Vercel demo output. Edition limits, page titles, descriptions, and the service-worker cache version come from `src/edition.js`.
 
 ## Run locally
 
