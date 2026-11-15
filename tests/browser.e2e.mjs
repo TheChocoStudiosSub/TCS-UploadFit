@@ -26,10 +26,19 @@ try {
   await page.locator('#language-select').selectOption('en');
   await assertText(page, '#page-title', 'Prepare images for upload.');
 
-  const png = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
-    'base64'
-  );
+  const pngBytes = await page.evaluate(async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 240;
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#2E1B12';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#C18A5A';
+    context.fillRect(40, 40, 120, 90);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    return Array.from(new Uint8Array(await blob.arrayBuffer()));
+  });
+  const png = Buffer.from(pngBytes);
   await page.locator('#file-input').setInputFiles({
     name: 'browser-check.png',
     mimeType: 'image/png',
@@ -37,7 +46,11 @@ try {
   });
   await page.waitForFunction(() => document.querySelector('#process-all')?.disabled === false);
   await page.locator('#process-all').click();
-  await page.waitForFunction(() => document.querySelector('#download-selected')?.disabled === false, null, { timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector('#download-selected')?.disabled === false, null, { timeout: 30000 }).catch(async () => {
+    const state = await page.locator('#toast').innerText().catch(() => '');
+    const queue = await page.locator('#queue-list').innerText().catch(() => '');
+    throw new Error(`Image did not reach a prepared state. Toast: ${state}. Queue: ${queue}`);
+  });
 
   const [singleDownload] = await Promise.all([
     page.waitForEvent('download'),
