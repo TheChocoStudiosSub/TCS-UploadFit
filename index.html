@@ -115,8 +115,9 @@
               </div>
               <div class="queue-toolbar"><span id="queue-summary" data-i18n="queueEmpty">Waiting for files</span><button id="clear-files" class="bare-button" type="button" disabled data-i18n="clearQueue">CLEAR QUEUE</button></div>
               <div class="queue-head"><span data-i18n="sourceFile">SOURCE FILE</span><span data-i18n="sourceSize">SOURCE SIZE</span><span data-i18n="jobStatus">STATUS</span><span class="sr-only" data-i18n="actions">Actions</span></div>
-              <ol id="queue-list" class="queue-list" aria-live="polite">
+              <ol id="queue-list" class="queue-list">
               </ol>
+              <div id="queue-status" class="sr-only" role="status" aria-live="polite"></div>
               <div class="queue-bottom"><span data-i18n="queueHint">Select a row to inspect its source and prepared file.</span><span id="queue-selected">—</span></div>
             </section>
 
@@ -146,7 +147,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><span>© 2026 THE CHOCO STUDIOS</span><nav><a href="https://tcs-uploadfit.vercel.app/" target="_blank" rel="noopener noreferrer" data-i18n="demoLink" data-edition-badge>DEMO TCS</a><a href="/privacy.html" data-i18n="privacy">PRIVACY</a><a href="/terms.html" data-i18n="terms">TERMS</a><a href="mailto:thechocostudio@gmail.com" data-i18n="support">SUPPORT</a></nav><span data-i18n="footerTag">MADE FOR THE LAST MILE BEFORE UPLOAD.</span></footer>
+    <footer class="site-footer"><span>© 2026 THE CHOCO STUDIOS</span><nav><a href="/privacy.html" data-i18n="privacy">PRIVACY</a><a href="/terms.html" data-i18n="terms">TERMS</a><a href="mailto:thechocostudio@gmail.com" data-i18n="support">SUPPORT</a></nav><span data-i18n="footerTag">MADE FOR THE LAST MILE BEFORE UPLOAD.</span></footer>
   </div>
 
   <dialog id="preset-dialog" class="preset-dialog">
