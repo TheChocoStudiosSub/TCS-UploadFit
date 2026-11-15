@@ -180,13 +180,7 @@ function renderQueue() {
   if (!queue.length) {
     const empty = document.createElement('li');
     empty.className = 'queue-empty';
-    const index = document.createElement('span');
-    index.className = 'empty-index';
-    index.textContent = '—';
-    const copy = document.createElement('span');
-    copy.textContent = tr('queuePlaceholder');
-    empty.append(index, copy);
-    list.append(empty);
+    // Keep the queue empty; do not show instructional filler in the list.
   } else {
     queue.forEach((item, index) => {
       const row = document.createElement('li');
@@ -235,7 +229,7 @@ function renderQueue() {
     });
   }
 
-  $('#queue-selected').textContent = selectedId ? String(Math.max(0, queue.findIndex(item => item.id === selectedId) + 1)).padStart(2, '0') : '—';
+  $('#queue-selected').textContent = selectedId ? String(Math.max(0, queue.findIndex(item => item.id === selectedId) + 1)).padStart(2, '0') : '';
   $('#download-all').disabled = !queue.some(item => item.result) || processing;
   $('#process-all').textContent = processing ? (language === 'id' ? 'SEDANG MEMPROSES…' : 'PREPARING…') : tr('prepareAll');
 }
