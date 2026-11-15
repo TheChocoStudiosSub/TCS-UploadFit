@@ -172,3 +172,9 @@ a{color:inherit}
 .app-frame{padding:0 12px}.brand-wordmark strong{font-size:17px}.brand-overline{font-size:9px}.ready-light{font-size:9px}.language-picker{padding-left:9px}.recipe-column{grid-template-columns:1fr 1fr;column-gap:13px}.option-line{gap:11px}.check-control{font-size:10px}.queue-head,.queue-row{grid-template-columns:minmax(0,1fr) 54px 63px 45px;gap:5px}.file-name{font-size:10px}.row-size,.row-status{font-size:8px}.comparison-cell{padding:6px}.image-window{height:112px}.comparison-label{font-size:8px}.proof-actions{flex-direction:column}.process-button{min-height:40px}.export-actions{display:grid;grid-template-columns:1fr 1fr}.export-button{min-height:36px}.queue-bottom{font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* Compact TCS UploadFit brand mark */
+.brand{gap:11px}
+.brand-symbol{display:grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid var(--line-strong);background:var(--surface)}
+.brand-symbol svg{display:block;width:28px;height:28px;fill:none;stroke:var(--ink);stroke-width:2.3;stroke-linecap:square;stroke-linejoin:miter}
+@media(max-width:470px){.brand-symbol{width:36px;height:36px}.brand-symbol svg{width:25px;height:25px}}
