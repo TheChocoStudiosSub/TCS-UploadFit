@@ -20,8 +20,8 @@ try {
   await page.locator('#file-input').waitFor({ state: 'attached' });
 
   await page.locator('#language-select').selectOption('id');
-  await assertText(page, '#page-title', 'Persiapkan gambar untuk diunggah.');
-  await assertText(page, '#recipe-heading', 'Pengaturan output');
+  await assertText(page, '#page-title', 'Siapkan gambar untuk diunggah.');
+  await assertText(page, '#recipe-heading', 'Pengaturan gambar');
   await assertText(page, '#jobs-heading', 'Daftar gambar');
   await page.locator('#language-select').selectOption('en');
   await assertText(page, '#page-title', 'Prepare images for upload.');

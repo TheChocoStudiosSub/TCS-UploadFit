@@ -2,7 +2,7 @@
 
 <p><img src="assets/icon.svg" width="88" height="88" alt="TCS UploadFit logo"></p>
 
-**TCS UploadFit** is a local-first image preparation application by The Choco Studios. It is designed as a compact production bench: specify the target, prepare a batch, inspect the output, then export.
+**TCS UploadFit** is a local-first image preparation application by The Choco Studios. It is designed as a simple image-preparation tool: specify the target, prepare a batch, inspect the output, then export.
 
 ## Product principles
 
@@ -26,9 +26,9 @@ The public demo is built from `src/edition.js`: **5 images**, **10 MB per input 
 - Quality tuning for lossy formats.
 - File-size targeting with explicit pass/fail feedback.
 - Sequential batch processing for up to 5 images in the public demo, with a 50 MB aggregate prepared-output cap.
-- Before/after proof with actual dimensions and byte counts.
+- Side-by-side image preview with actual dimensions and file sizes.
 - ZIP export for completed batches.
-- Local custom recipes and English/Indonesian interface.
+- Saved image settings and English/Indonesian interface.
 - App-shell caching for offline use after the first successful load.
 
 ## Supported inputs and limits
@@ -79,7 +79,7 @@ The repository does not contain a Store package, signing identity or configured 
 ## Project map
 
 - `index.html` — semantic workspace and application controls.
-- `src/styles.css` — bespoke editorial-industrial design system.
+- `src/styles.css` — responsive application styles.
 - `src/app.js` — queue, presets, preview, downloads and language handling.
 - `src/processor.js` — local decode, resize, encode and size targeting.
 - `src/zip.js` — dependency-free ZIP writer.

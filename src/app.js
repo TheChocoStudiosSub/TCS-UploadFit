@@ -454,7 +454,7 @@ async function processQueue() {
       selectedId = item.id;
       renderQueue();
       renderSelected();
-      $('#process-all').textContent = tr('processing', { current: completed + failed + 1, total: pending.length });
+      $('#process-all').querySelector('[data-i18n="prepareAll"]').textContent = tr('processing', { current: completed + failed + 1, total: pending.length });
       try {
         if (item.outputUrl) URL.revokeObjectURL(item.outputUrl);
         const result = await processImageInWorker(item.file, settings, processController.signal);
@@ -493,6 +493,7 @@ async function processQueue() {
     $$('.mode-button, .target-mode-button').forEach(button => { button.disabled = false; });
     $('#cancel-process').hidden = true;
     $('#cancel-process').disabled = true;
+    $('#process-all').querySelector('[data-i18n="prepareAll"]').textContent = tr('prepareAll');
     try {
       renderQueue();
       renderSelected();

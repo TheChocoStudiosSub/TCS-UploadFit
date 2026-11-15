@@ -19,7 +19,7 @@ Choose the output dimensions, frame behaviour, format and maximum file size. Add
 - Convert JPEG, PNG and WebP; BMP and AVIF may be accepted when the installed browser can decode them.
 - Set a maximum file-size target and verify whether the result meets it.
 - Process up to 5 selected images sequentially, with a maximum 15 MB input file and 40 MB prepared-output batch.
-- Save personal output recipes on the device.
+- Save personal image settings on the device.
 - Use English or Indonesian.
 
 ### Made for private files

@@ -39,12 +39,12 @@
       <section class="workbench" aria-label="Image preparation workspace">
         <aside class="recipe-column" aria-labelledby="recipe-heading">
           <div class="column-title">
-            <div><h2 id="recipe-heading" data-i18n="recipeTitle">Output recipe</h2></div>
+            <div><h2 id="recipe-heading" data-i18n="recipeTitle">Image settings</h2></div>
             <button id="reset-settings" class="bare-button reset-button" type="button" data-i18n="reset">RESET</button>
           </div>
 
           <div class="field-block preset-block">
-            <label for="preset-select" data-i18n="preset">Start from a recipe</label>
+            <label for="preset-select" data-i18n="preset">Start from saved settings</label>
             <div class="preset-control-row"><div class="select-shell"><select id="preset-select"><option value="custom" data-i18n="customRecipe">Your own settings</option><option value="email" data-i18n="emailRecipe">Email attachment · 1 MB</option><option value="web" data-i18n="webRecipe">Website image · 500 KB</option><option value="catalog" data-i18n="catalogRecipe">Product catalogue · 2 MB</option></select></div><button id="delete-preset" class="bare-button delete-preset-button" type="button" data-i18n="deletePreset" disabled>DELETE PRESET</button></div>
             <p class="field-note" data-i18n="presetNote">Starting points, not rules issued by a destination.</p>
           </div>
@@ -97,13 +97,13 @@
 
           <div class="recipe-foot">
             <div class="privacy-serial"><div><strong data-i18n="localOnly">LOCAL BY DESIGN</strong><small data-i18n="localOnlyNote">Your images are not sent to a server.</small></div></div>
-            <button id="save-preset" class="text-action" type="button"><span>＋</span><span data-i18n="saveRecipe">Save this recipe</span></button>
+            <button id="save-preset" class="text-action" type="button"><span>＋</span><span data-i18n="saveRecipe">Save these settings</span></button>
           </div>
         </aside>
 
         <section class="production-column" aria-label="Image intake and output">
           <div class="intake-panel">
-            <div class="intake-label"><span data-i18n="intakeTitle">Image intake</span><span class="intake-accepted">JPG / PNG / WEBP / BMP / AVIF</span></div>
+            <div class="intake-label"><span data-i18n="intakeTitle">Add images</span><span class="intake-accepted">JPG / PNG / WEBP / BMP / AVIF</span></div>
             <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/avif,.jpg,.jpeg,.png,.webp,.bmp,.avif" multiple hidden>
             <div id="dropzone" class="dropzone" role="group" aria-label="Add images">
               <div class="drop-copy"><strong data-i18n="dropHeadline">Put the files on the table.</strong><span data-i18n="dropSubhead">Drop images here, or browse from your device.</span></div>
@@ -128,7 +128,7 @@
 
             <section class="proof-panel" aria-labelledby="proof-heading">
               <div class="panel-bar proof-title-bar">
-                <div><h2 id="proof-heading" data-i18n="proofTitle">Output proof</h2></div>
+                <div><h2 id="proof-heading" data-i18n="proofTitle">Image preview</h2></div>
                 <span id="proof-state" class="proof-state">NO FILE SELECTED</span>
               </div>
               <div class="proof-view" id="proof-view">
@@ -157,7 +157,7 @@
 
   <dialog id="preset-dialog" class="preset-dialog">
     <form method="dialog" id="preset-form">
-      <div class="dialog-overline">TCS / LOCAL RECIPES</div>
+      <div class="dialog-overline">TCS / SAVED SETTINGS</div>
       <h2 data-i18n="saveRecipeTitle">Keep this setup.</h2>
       <p data-i18n="saveRecipeIntro">Give these output settings a name. They stay on this device.</p>
       <label for="preset-name" data-i18n="recipeName">Recipe name</label>

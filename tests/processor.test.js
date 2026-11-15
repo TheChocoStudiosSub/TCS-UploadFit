@@ -171,13 +171,13 @@ test('size-only processing reports the original and reduced resolution', async (
       return canvas;
     }
   };
-  globalThis.createImageBitmap = async () => ({ width: 6000, height: 4000, close() {} });
+  globalThis.createImageBitmap = async () => ({ width: 4000, height: 3000, close() {} });
   try {
     const file = Object.assign(new Blob([new Uint8Array(64)], { type: 'image/jpeg' }), { name: 'large.jpg' });
     const result = await processImage(file, { ...base, maxSize: '0.2', sizeUnit: 'MB' });
     assert.equal(result.downscaled, true);
-    assert.equal(result.sourceWidth, 6000);
-    assert.equal(result.sourceHeight, 4000);
+    assert.equal(result.sourceWidth, 4000);
+    assert.equal(result.sourceHeight, 3000);
     assert.ok(result.width < result.sourceWidth);
     assert.ok(result.height < result.sourceHeight);
   } finally {

@@ -83,6 +83,11 @@ test('size behaviour offers maximum size and exact frame without a redundant enl
   assert.ok(processor.includes("targetMode === 'max'"));
 });
 
+test('processing progress does not destroy the translated button label', () => {
+  assert.ok(app.includes("$('#process-all').querySelector('[data-i18n=\"prepareAll\"]')"));
+  assert.ok(app.includes("textContent = tr('prepareAll')"));
+});
+
 test('custom presets are filtered through settings validation before use', () => {
   assert.match(app, /filterValidPresets\(parsed, settings => normalizeSettings\(settings, language\), 30\)/);
   assert.ok(app.includes('function deleteSelectedPreset()'));
