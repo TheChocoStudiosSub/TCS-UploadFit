@@ -1,8 +1,12 @@
 # TCS UploadFit
 
-<p><img src="assets/icon.svg" width="88" height="88" alt="TCS UploadFit logo"></p>
+<p><img src="assets/logo%20tcs%20upload%20fit.jpg" width="255" alt="Official TCS UploadFit logo"></p>
 
 **TCS UploadFit** is a local-first image preparation application by The Choco Studios. It is designed as a simple image-preparation tool: specify the target, prepare a batch, inspect the output, then export.
+
+## Official brand asset
+
+The approved horizontal logo is stored at `assets/logo tcs upload fit.jpg` and is used by the application header. The app icon in `assets/icon.svg` references the same approved logo.
 
 ## Product principles
 

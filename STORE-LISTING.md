@@ -1,5 +1,7 @@
 # Microsoft Store listing: TCS UploadFit
 
+![Official TCS UploadFit logo](assets/logo%20tcs%20upload%20fit.jpg)
+
 ## Product name
 TCS UploadFit
 

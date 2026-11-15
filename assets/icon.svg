@@ -1,8 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
   <title>TCS UploadFit</title>
-  <rect width="512" height="512" rx="72" fill="#202124"/>
-  <g fill="none" stroke="#f7f7f5" stroke-width="38" stroke-linecap="square" stroke-linejoin="round">
-    <path d="M94 128v151c0 69 39 108 94 108s94-39 94-108V128"/>
-    <path d="M310 384V128h111M310 246h92"/>
-  </g>
+  <rect width="512" height="512" rx="72" fill="#141618"/>
+  <image href="/assets/logo%20tcs%20upload%20fit.jpg" xlink:href="/assets/logo%20tcs%20upload%20fit.jpg" x="14" y="142" width="484" height="228" preserveAspectRatio="xMidYMid meet"/>
 </svg>

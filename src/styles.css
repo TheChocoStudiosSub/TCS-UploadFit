@@ -185,8 +185,7 @@ a{color:inherit}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
-/* Compact TCS UploadFit brand mark */
-.brand{gap:11px}
-.brand-symbol{display:grid;place-items:center;flex:none;width:40px;height:40px;border:0;border-radius:7px;background:var(--ink);color:var(--page);overflow:hidden}
-.brand-symbol svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:38;stroke-linecap:square;stroke-linejoin:round}
-@media(max-width:470px){.brand-symbol{width:36px;height:36px}}
+/* Official TCS UploadFit logo lockup */
+.brand{gap:12px;min-width:0}
+.brand-logo{display:block;width:174px;height:auto;max-height:66px;object-fit:contain;object-position:left center;border-radius:3px}
+@media(max-width:470px){.brand-logo{width:145px;max-height:56px}}
