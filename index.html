@@ -45,7 +45,7 @@
 
           <div class="field-block preset-block">
             <label for="preset-select" data-i18n="preset">Start from a recipe</label>
-            <div class="select-shell"><select id="preset-select"><option value="custom" data-i18n="customRecipe">Your own settings</option><option value="email" data-i18n="emailRecipe">Email attachment · 1 MB</option><option value="web" data-i18n="webRecipe">Website image · 500 KB</option><option value="catalog" data-i18n="catalogRecipe">Product catalogue · 2 MB</option></select></div>
+            <div class="preset-control-row"><div class="select-shell"><select id="preset-select"><option value="custom" data-i18n="customRecipe">Your own settings</option><option value="email" data-i18n="emailRecipe">Email attachment · 1 MB</option><option value="web" data-i18n="webRecipe">Website image · 500 KB</option><option value="catalog" data-i18n="catalogRecipe">Product catalogue · 2 MB</option></select></div><button id="delete-preset" class="bare-button delete-preset-button" type="button" data-i18n="deletePreset" disabled>DELETE PRESET</button></div>
             <p class="field-note" data-i18n="presetNote">Starting points, not rules issued by a destination.</p>
           </div>
 
@@ -82,7 +82,7 @@
           </div>
           <div class="field-block quality-block" id="quality-block">
             <div class="range-heading"><label for="quality-range" data-i18n="quality">Encoding quality</label><output id="quality-value" for="quality-range">86%</output></div>
-            <input id="quality-range" type="range" min="25" max="100" min="65" value="86">
+            <input id="quality-range" type="range" min="65" max="100" value="86">
             <div class="range-labels"><span data-i18n="smallerFile">SMALLER FILE</span><span data-i18n="finerImage">FINER IMAGE</span></div>
           </div>
           <div class="field-block background-block" id="background-block">
