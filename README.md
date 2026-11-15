@@ -1,5 +1,7 @@
 # TCS UploadFit
 
+<p><img src="assets/icon.svg" width="88" height="88" alt="TCS UploadFit logo"></p>
+
 **TCS UploadFit** is a local-first image preparation application by The Choco Studios. It is designed as a compact production bench: specify the target, prepare a batch, inspect the output, then export.
 
 ## Product principles

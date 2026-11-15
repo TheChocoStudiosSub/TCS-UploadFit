@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#f0eee6"/>
-  <rect x="54" y="54" width="404" height="404" fill="#e34f31" stroke="#171916" stroke-width="12"/>
-  <path d="M118 198V118h80M314 118h80v80M394 314v80h-80M198 394h-80v-80" fill="none" stroke="#171916" stroke-width="22" stroke-linecap="square"/>
-  <rect x="171" y="171" width="170" height="170" fill="#f0eee6" stroke="#171916" stroke-width="12"/>
-  <path d="M192 309 235 244l30 40 32-55 42 80z" fill="#171916"/>
-  <circle cx="238" cy="213" r="13" fill="#e34f31" stroke="#171916" stroke-width="7"/>
-  <path d="M225 256h62" stroke="#d9e36b" stroke-width="9"/>
+  <title>TCS UploadFit</title>
+  <rect width="512" height="512" rx="72" fill="#202124"/>
+  <g fill="none" stroke="#f7f7f5" stroke-width="38" stroke-linecap="square" stroke-linejoin="round">
+    <path d="M94 128v151c0 69 39 108 94 108s94-39 94-108V128"/>
+    <path d="M310 384V128h111M310 246h92"/>
+  </g>
 </svg>
