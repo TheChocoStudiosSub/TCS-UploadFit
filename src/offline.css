@@ -1,0 +1,6 @@
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{font:16px/1.6 Arial,"Helvetica Neue",sans-serif;background:#f7f7f5;color:#202124;display:grid;min-height:100vh;place-items:center;margin:0;padding:24px}
+.card{max-width:420px;width:100%;background:#fff;padding:36px;border:1px solid #d9dcdf;text-align:left}
+h1{margin:0 0 12px;font-size:28px;line-height:1.15}
+p{color:#686b70;margin:0}

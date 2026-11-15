@@ -17,6 +17,7 @@ const SHELL_FILES = [
   '/assets/icon-512.png',
   '/assets/icon-maskable-512.png',
   '/offline.html',
+  '/src/offline.css',
   '/privacy.html',
   '/terms.html'
 ];
