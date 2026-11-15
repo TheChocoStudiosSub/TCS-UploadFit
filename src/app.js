@@ -302,7 +302,7 @@ function renderSelected() {
     comparison.hidden = true;
     proofState.textContent = tr('notSelected');
     proofState.className = 'proof-state';
-    readout.textContent = '—';
+    readout.textContent = '';
     $('#download-selected').disabled = true;
     $('#proof-readout').querySelector('span').textContent = tr('proofReadout');
     return;
@@ -311,7 +311,7 @@ function renderSelected() {
   empty.hidden = true;
   comparison.hidden = false;
   $('#source-preview').src = item.sourceUrl;
-  $('#source-dimensions').textContent = item.sourceDimensions || '—';
+  $('#source-dimensions').textContent = item.sourceDimensions || '';
   $('#source-size').textContent = formatBytes(item.file.size);
   const outputImage = $('#output-preview');
   const outputWait = $('#output-wait');
@@ -340,7 +340,7 @@ function renderSelected() {
     outputImage.hidden = true;
     outputImage.removeAttribute('src');
     outputWait.hidden = false;
-    $('#output-dimensions').textContent = '—';
+    $('#output-dimensions').textContent = '';
     $('#output-size').textContent = tr('outputPending');
     proofState.textContent = item.status === 'error' ? tr('error') : tr('sourceOnly');
     proofState.className = `proof-state ${item.status === 'error' ? 'state-bad' : ''}`;

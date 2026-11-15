@@ -11,7 +11,7 @@ export const MAX_OUTPUT_EDGE = EDITION.maxOutputEdge;
 export const MIN_LOSSY_QUALITY = 0.65;
 
 export function formatBytes(bytes, decimals = 1) {
-  if (!Number.isFinite(bytes) || bytes < 0) return '—';
+  if (!Number.isFinite(bytes) || bytes < 0) return '';
   if (bytes < 1024) return `${bytes} B`;
   const units = ['KB', 'MB', 'GB'];
   let value = bytes / 1024;
@@ -26,7 +26,7 @@ export function formatBytes(bytes, decimals = 1) {
 export function formatDimensions(width, height) {
   return width > 0 && height > 0
     ? `${width.toLocaleString()} × ${height.toLocaleString()} px`
-    : '—';
+    : '';
 }
 
 function positiveInteger(value, label, language) {

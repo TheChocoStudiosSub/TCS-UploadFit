@@ -5,7 +5,7 @@ import { processImage, normalizeSettings, formatBytes } from '../src/processor.j
 import { createZip } from '../src/zip.js';
 const output = document.querySelector('#results');
 const results = [];
-const check = (name, condition, detail = '') => results.push(`${condition ? 'PASS' : 'FAIL'} ${name}${detail ? ` — ${detail}` : ''}`);
+const check = (name, condition, detail = '') => results.push(`${condition ? 'PASS' : 'FAIL'} ${name}${detail ? `: ${detail}` : ''}`);
 try {
   check('settings normalize', normalizeSettings({width:'320',height:'240',format:'image/png',mode:'fit',preserveRatio:true,noUpscale:true}).width === 320);
   check('byte formatting', formatBytes(1024) === '1.0 KB');
@@ -24,7 +24,7 @@ try {
   const signature = new Uint8Array(await archive.slice(0,4).arrayBuffer());
   check('ZIP local-header signature', signature.join(',') === '80,75,3,4');
 } catch (error) {
-  results.push(`FAIL browser pipeline — ${error.message}`);
+  results.push(`FAIL browser pipeline: ${error.message}`);
 }
 const passed = results.filter(line => line.startsWith('PASS')).length;
 output.textContent = `${results.join('\n')}\n\n${passed}/${results.length} browser checks passed`;

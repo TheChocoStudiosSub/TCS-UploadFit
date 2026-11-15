@@ -1,4 +1,4 @@
-# Microsoft Store listing — TCS UploadFit
+# Microsoft Store listing: TCS UploadFit
 
 ## Product name
 TCS UploadFit
@@ -37,7 +37,7 @@ Utilities & tools. Choose the closest available category in Partner Center.
 image resizer, image compressor, batch image converter, reduce photo size, image upload requirements, jpeg compressor, webp converter, png converter, image size limit
 
 ## Support
-The Choco Studios — thechocostudio@gmail.com
+The Choco Studios: thechocostudio@gmail.com
 
 ## Commercial model proposal
 Paid application, one-time purchase. Suggested initial US price: US$4.99, with regional pricing reviewed in Partner Center. This is a proposal only; no price is configured by this repository.

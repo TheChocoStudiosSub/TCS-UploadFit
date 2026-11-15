@@ -78,16 +78,16 @@ The repository does not contain a Store package, signing identity or configured 
 
 ## Project map
 
-- `index.html` — semantic workspace and application controls.
-- `src/styles.css` — responsive application styles.
-- `src/app.js` — queue, presets, preview, downloads and language handling.
-- `src/processor.js` — local decode, resize, encode and size targeting.
-- `src/zip.js` — dependency-free ZIP writer.
-- `src/i18n.js` — English and Indonesian strings.
-- `sw.js` — offline app-shell caching.
-- `manifest.webmanifest` — install metadata.
-- `privacy.html`, `terms.html` — public policy pages.
-- `tests/` — Node and browser checks.
+- `index.html`: semantic workspace and application controls.
+- `src/styles.css`: responsive application styles.
+- `src/app.js`: queue, presets, preview, downloads and language handling.
+- `src/processor.js`: local decode, resize, encode and size targeting.
+- `src/zip.js`: dependency-free ZIP writer.
+- `src/i18n.js`: English and Indonesian strings.
+- `sw.js`: offline app-shell caching.
+- `manifest.webmanifest`: install metadata.
+- `privacy.html`, `terms.html`: public policy pages.
+- `tests/`: Node and browser checks.
 
 ## Ownership
 

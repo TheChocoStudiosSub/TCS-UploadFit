@@ -8,7 +8,7 @@ export const EDITIONS = Object.freeze({
     maxOutputEdge: 16_000,
     showDemoBadge: true,
     badgeText: 'DEMO TCS',
-    title: { en: 'TCS UploadFit — Demo', id: 'TCS UploadFit — Demo' },
+    title: { en: 'TCS UploadFit: Demo', id: 'TCS UploadFit: Demo' },
     description: {
       en: 'TCS UploadFit demo: prepare and preview images locally with a limited public capacity.',
       id: 'Demo TCS UploadFit: siapkan dan pratinjau gambar secara lokal dengan kapasitas demo terbatas.'
@@ -23,7 +23,7 @@ export const EDITIONS = Object.freeze({
     maxOutputEdge: 16_000,
     showDemoBadge: false,
     badgeText: '',
-    title: { en: 'TCS UploadFit — Image preparation', id: 'TCS UploadFit — Persiapan gambar' },
+    title: { en: 'TCS UploadFit: Image preparation', id: 'TCS UploadFit: Persiapan gambar' },
     description: {
       en: 'Resize, compress and convert images locally before uploading. Inspect the output and save files on your device.',
       id: 'Ubah ukuran, kompres, dan konversi gambar secara lokal sebelum diunggah. Periksa hasil dan simpan file di perangkat.'
