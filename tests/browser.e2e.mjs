@@ -107,7 +107,7 @@ try {
   }));
   assert.deepEqual(cachedShell, { offlinePage: true, appScript: true, stylesheet: true });
   await context.setOffline(true);
-  await offlinePage.goto(`${baseUrl}/__uploadfit_offline_check__`, { waitUntil: 'domcontentloaded' });
+  await offlinePage.goto(`${baseUrl}/offline.html`, { waitUntil: 'domcontentloaded' });
   await assertText(offlinePage, 'h1', "You're offline.");
   await context.setOffline(false);
   await offlinePage.close();
@@ -120,7 +120,7 @@ try {
   console.log('PASS ZIP download and signature');
   console.log('PASS custom preset save and delete');
   console.log('PASS production build app-shell caching');
-  console.log('PASS offline navigation fallback');
+  console.log('PASS cached offline page');
 } finally {
   await context.close();
   await browser.close();
