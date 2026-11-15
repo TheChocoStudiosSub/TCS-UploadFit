@@ -94,10 +94,10 @@ try {
   await page.waitForFunction(() => document.querySelector('#delete-preset')?.disabled === false);
   await page.locator('#delete-preset').click();
   await page.waitForFunction(() => document.querySelector('#delete-preset')?.disabled === true);
-  await offlinePage.evaluate(async () => { await navigator.serviceWorker.ready; });
+
   const offlinePage = await context.newPage();
   await offlinePage.goto(baseUrl, { waitUntil: 'networkidle' });
-  await offlinePage.evaluate(async () => navigator.serviceWorker.ready);
+  await offlinePage.evaluate(async () => { await navigator.serviceWorker.ready; });
   await offlinePage.reload({ waitUntil: 'networkidle' });
   await offlinePage.waitForFunction(() => Boolean(navigator.serviceWorker.controller), null, { timeout: 15000 });
   const cachedShell = await offlinePage.evaluate(async () => ({
