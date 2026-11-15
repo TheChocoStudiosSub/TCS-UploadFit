@@ -6,6 +6,7 @@ const SHELL_FILES = [
   '/src/styles.css',
   '/src/app.js',
   '/src/processor.js',
+  '/src/processor.worker.js',
   '/src/edition.js',
   '/src/zip.js',
   '/src/i18n.js',

@@ -30,6 +30,9 @@ let language = storageGet(STORAGE.language) || (navigator.language?.toLowerCase(
 let queue = [];
 let selectedId = null;
 let processing = false;
+let processController = null;
+let activeWorker = null;
+let cancelRequested = false;
 let toastTimer = null;
 let previousSizeUnit = 'MB';
 const MAX_BATCH_RESULT_BYTES = EDITION.maxBatchOutputBytes;
@@ -183,6 +186,7 @@ function renderQueue() {
   $('#file-input').disabled = processing;
   $('#dropzone').classList.toggle('is-locked', processing);
   $('#dropzone').setAttribute('aria-disabled', String(processing));
+  $('#cancel-process').hidden = !processing;
 
   if (!queue.length) {
     const empty = document.createElement('li');
@@ -307,7 +311,12 @@ function renderSelected() {
     proofState.className = `proof-state ${item.result.metLimit ? 'state-good' : 'state-bad'}`;
     $('#proof-readout').querySelector('span').textContent = item.result.metLimit ? tr('limitMet') : tr('limitMissed');
     const delta = item.result.reduction;
-    readout.textContent = item.result.warning || `${formatDimensions(item.result.width, item.result.height)} · ${delta >= 0 ? `${delta.toFixed(1)}% smaller` : `${Math.abs(delta).toFixed(1)}% larger`} than source`;
+    readout.textContent = item.result.downscaled
+      ? tr('resolutionDownscaled', {
+          from: formatDimensions(item.result.sourceWidth, item.result.sourceHeight),
+          to: formatDimensions(item.result.width, item.result.height)
+        })
+      : item.result.warning || `${formatDimensions(item.result.width, item.result.height)} · ${delta >= 0 ? `${delta.toFixed(1)}% smaller` : `${Math.abs(delta).toFixed(1)}% larger`} than source`;
   } else {
     outputImage.hidden = true;
     outputImage.removeAttribute('src');
@@ -335,6 +344,65 @@ function downloadBlob(blob, filename) {
   window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
+function abortError() {
+  const error = new Error(tr('processingCancelled'));
+  error.name = 'AbortError';
+  return error;
+}
+
+function processImageInWorker(file, settings, signal) {
+  if (typeof Worker !== 'function' || typeof OffscreenCanvas !== 'function') {
+    return processImage(file, settings, { signal });
+  }
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let worker;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener('abort', onAbort);
+      worker?.terminate();
+      if (activeWorker === worker) activeWorker = null;
+    };
+    const onAbort = () => {
+      finish();
+      reject(abortError());
+    };
+    try {
+      worker = new Worker(new URL('./processor.worker.js', import.meta.url), { type: 'module' });
+      activeWorker = worker;
+      if (signal?.aborted) { onAbort(); return; }
+      signal?.addEventListener('abort', onAbort, { once: true });
+      worker.onmessage = event => {
+        finish();
+        if (event.data?.ok) resolve(event.data.result);
+        else {
+          const error = new Error(event.data?.error || tr('imageError'));
+          error.name = event.data?.name || 'Error';
+          reject(error);
+        }
+      };
+      worker.onerror = event => {
+        finish();
+        reject(new Error(event.message || tr('imageError')));
+      };
+      worker.postMessage({ file, settings });
+    } catch (error) {
+      finish();
+      if (error?.name === 'AbortError') reject(error);
+      else processImage(file, settings, { signal }).then(resolve, reject);
+    }
+  });
+}
+
+function cancelProcessQueue() {
+  if (!processing) return;
+  cancelRequested = true;
+  processController?.abort();
+  activeWorker?.terminate();
+  activeWorker = null;
+}
+
 async function processQueue() {
   if (processing) return;
   if (!queue.length) { showToast(tr('noFiles'), 'error'); return; }
@@ -343,49 +411,75 @@ async function processQueue() {
   try { settings = readSettings(); } catch (error) { showToast(error.message, 'error'); return; }
 
   processing = true;
+  cancelRequested = false;
+  processController = new AbortController();
   const controls = ['#width-input','#height-input','#max-size','#size-unit','#format-select','#quality-range','#no-upscale','#background-color','#preset-select','#reset-settings','#save-preset'];
-  controls.forEach(selector => { $(selector).disabled = true; });
-  $$('.mode-button').forEach(button => { button.disabled = true; });
-  renderQueue();
-
-  const pending = queue.filter(item => item.status !== 'done');
   let completed = 0;
   let failed = 0;
-  for (const item of pending) {
-    item.status = 'working';
-    item.error = null;
-    selectedId = item.id;
+  const pending = queue.filter(item => item.status !== 'done');
+  controls.forEach(selector => { $(selector).disabled = true; });
+  $('.mode-button').forEach(button => { button.disabled = true; });
+  $('#cancel-process').hidden = false;
+  $('#cancel-process').disabled = false;
+
+  try {
     renderQueue();
-    renderSelected();
-    $('#process-all').textContent = tr('processing', { current: completed + failed + 1, total: pending.length });
-    try {
-      if (item.outputUrl) URL.revokeObjectURL(item.outputUrl);
-      const result = await processImage(item.file, settings);
-      const retainedBytes = queue.reduce((sum, entry) => sum + (entry.result?.size || 0), 0);
-      if (retainedBytes + result.size > MAX_BATCH_RESULT_BYTES) {
-        throw new Error('The prepared batch reached its 256 MB memory limit. Export or remove completed images before preparing more.');
+    for (const item of pending) {
+      if (cancelRequested) break;
+      item.status = 'working';
+      item.error = null;
+      selectedId = item.id;
+      renderQueue();
+      renderSelected();
+      $('#process-all').textContent = tr('processing', { current: completed + failed + 1, total: pending.length });
+      try {
+        if (item.outputUrl) URL.revokeObjectURL(item.outputUrl);
+        const result = await processImageInWorker(item.file, settings, processController.signal);
+        if (cancelRequested) throw abortError();
+        const retainedBytes = queue.reduce((sum, entry) => sum + (entry.id === item.id ? 0 : (entry.result?.size || 0)), 0);
+        if (retainedBytes + result.size > MAX_BATCH_RESULT_BYTES) {
+          throw new Error(tr('batchLimitReached', { maxOutputSize: formatBytes(MAX_BATCH_RESULT_BYTES) }));
+        }
+        item.result = result;
+        item.outputUrl = URL.createObjectURL(result.blob);
+        item.status = 'done';
+        completed += 1;
+      } catch (error) {
+        if (error?.name === 'AbortError' || cancelRequested) {
+          item.status = 'queued';
+          item.error = null;
+          break;
+        }
+        item.result = null;
+        item.outputUrl = null;
+        item.status = 'error';
+        item.error = error?.message || tr('imageError');
+        failed += 1;
       }
-      item.result = result;
-      item.outputUrl = URL.createObjectURL(result.blob);
-      item.status = 'done';
-      completed += 1;
-    } catch (error) {
-      item.result = null;
-      item.outputUrl = null;
-      item.status = 'error';
-      item.error = error?.message || tr('imageError');
-      failed += 1;
+      renderQueue();
+      renderSelected();
     }
-    renderQueue();
-    renderSelected();
+  } catch (error) {
+    if (error?.name !== 'AbortError') showToast(error?.message || tr('imageError'), 'error');
+  } finally {
+    activeWorker?.terminate();
+    activeWorker = null;
+    processController = null;
+    processing = false;
+    controls.forEach(selector => { $(selector).disabled = false; });
+    $('.mode-button').forEach(button => { button.disabled = false; });
+    $('#cancel-process').hidden = true;
+    $('#cancel-process').disabled = true;
+    try {
+      renderQueue();
+      renderSelected();
+    } catch (error) {
+      console.error('Unable to refresh the image queue after processing.', error);
+    }
   }
 
-  processing = false;
-  controls.forEach(selector => { $(selector).disabled = false; });
-  $$('.mode-button').forEach(button => { button.disabled = false; });
-  renderQueue();
-  renderSelected();
-  if (completed && !failed) showToast(tr('allDone'), 'success');
+  if (cancelRequested) showToast(tr('processingCancelled'), 'success');
+  else if (completed && !failed) showToast(tr('allDone'), 'success');
   else if (completed || failed) showToast(tr('someFailed'), failed ? 'error' : 'success');
 }
 
@@ -551,6 +645,7 @@ function handleFileEvents() {
   dropzone.addEventListener('drop', event => { if (!processing) addFiles(event.dataTransfer.files); });
   $('#clear-files').addEventListener('click', clearQueue);
   $('#process-all').addEventListener('click', processQueue);
+  $('#cancel-process').addEventListener('click', cancelProcessQueue);
   $('#download-selected').addEventListener('click', saveSelected);
   $('#download-all').addEventListener('click', exportBatch);
 }

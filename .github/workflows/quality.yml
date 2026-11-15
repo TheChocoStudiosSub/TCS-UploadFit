@@ -25,6 +25,7 @@ jobs:
         run: |
           node --check src/app.js
           node --check src/processor.js
+          node --check src/processor.worker.js
           node --check src/zip.js
           node --check src/i18n.js
           node --check sw.js
