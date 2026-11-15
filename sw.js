@@ -26,7 +26,7 @@ const OPTIONAL_SHELL_FILES = [
   '/terms.html'
 ];
 
-const NETWORK_FIRST_EXTENSIONS = /\\.(?:m?js|css)$/i;
+const NETWORK_FIRST_EXTENSIONS = /\.(?:m?js|css)$/i;
 
 async function storeResponse(request, response) {
   if (!response || !response.ok || response.type === 'opaque') return response;
@@ -37,7 +37,7 @@ async function storeResponse(request, response) {
 
 function offlineDocument(request) {
   const acceptedLanguages = request.headers?.get?.('accept-language') || '';
-  const isIndonesian = /\\bid\\b/i.test(acceptedLanguages);
+  const isIndonesian = /\bid\b/i.test(acceptedLanguages);
   const title = isIndonesian ? 'Anda sedang offline.' : "You're offline.";
   const description = isIndonesian
     ? 'Hubungkan kembali perangkat ke internet, lalu muat ulang TCS UploadFit. Setelah aplikasi terbuka, pemrosesan gambar berjalan langsung di perangkat.'
@@ -69,9 +69,9 @@ function offlineDocument(request) {
 
 function unavailableAssetResponse(request) {
   const pathname = new URL(request.url).pathname;
-  const contentType = /\\.m?js$/i.test(pathname)
+  const contentType = /\.m?js$/i.test(pathname)
     ? 'text/javascript; charset=utf-8'
-    : /\\.css$/i.test(pathname)
+    : /\.css$/i.test(pathname)
       ? 'text/css; charset=utf-8'
       : 'text/plain; charset=utf-8';
   return new Response('', {
