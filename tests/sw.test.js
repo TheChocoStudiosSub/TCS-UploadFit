@@ -13,6 +13,7 @@ function createHarness({ failures = [] } = {}) {
   const stored = new Map();
   const logs = [];
   let online = true;
+  let skipWaitingCalls = 0;
   const keyOf = input => {
     const value = typeof input === 'string' ? input : input.url;
     return new URL(value, 'https://uploadfit.test').pathname;
@@ -37,7 +38,10 @@ function createHarness({ failures = [] } = {}) {
   const context = {
     URL,
     Response,
-    console: { error: (...args) => logs.push(args) },
+    console: {
+      error: (...args) => logs.push(args),
+      warn: (...args) => logs.push(args)
+    },
     fetch: fetchMock,
     caches: {
       async open() { return cache; },
@@ -48,7 +52,7 @@ function createHarness({ failures = [] } = {}) {
     self: {
       location: { origin: 'https://uploadfit.test' },
       addEventListener(name, handler) { handlers.set(name, handler); },
-      skipWaiting: async () => {},
+      skipWaiting: async () => { skipWaitingCalls += 1; },
       clients: { claim: async () => {} }
     }
   };
@@ -61,7 +65,12 @@ function createHarness({ failures = [] } = {}) {
   async function request(pathname, mode = 'no-cors') {
     let responsePromise;
     handlers.get('fetch')({
-      request: { method: 'GET', url: new URL(pathname, 'https://uploadfit.test').href, mode },
+      request: {
+        method: 'GET',
+        url: new URL(pathname, 'https://uploadfit.test').href,
+        mode,
+        headers: { get: () => 'en-US,en;q=0.9' }
+      },
       respondWith(value) { responsePromise = value; }
     });
     return responsePromise;
@@ -69,7 +78,8 @@ function createHarness({ failures = [] } = {}) {
   return {
     handlers, stored, logs, networkBodies, install, request,
     setOnline(value) { online = value; },
-    setFailure(value) { failures.push(value); }
+    setFailure(value) { failures.push(value); },
+    get skipWaitingCalls() { return skipWaitingCalls; }
   };
 }
 
@@ -107,10 +117,37 @@ test('root navigation refreshes its own cache entry', async () => {
   assert.equal(sw.stored.get('/').body, 'updated-root');
 });
 
-test('one missing shell asset is logged without atomically discarding other cached files', async () => {
+test('a missing optional policy page is logged without blocking the complete app shell', async () => {
   const sw = createHarness({ failures: ['/terms.html'] });
   await sw.install();
   assert.ok(sw.logs.some(args => args[1] === '/terms.html'));
   assert.ok(sw.stored.has('/index.html'));
-  assert.ok(sw.stored.has('/privacy.html'));
+  assert.ok(sw.stored.has('/offline.html'));
+  assert.equal(sw.skipWaitingCalls, 1);
+});
+
+test('a failed required application asset prevents an incomplete worker from activating', async () => {
+  const sw = createHarness({ failures: ['/src/app.js'] });
+  await assert.rejects(sw.install(), /offline/);
+  assert.equal(sw.skipWaitingCalls, 0);
+});
+
+test('unknown navigation uses the cached offline page instead of a plain text response', async () => {
+  const sw = createHarness();
+  await sw.install();
+  sw.setOnline(false);
+  const response = await sw.request('/uncached-offline-route', 'navigate');
+  assert.equal(response.body, 'network:/offline.html');
+  assert.equal(response.status, 200);
+});
+
+test('navigation still returns a readable offline document if its cache entry is absent', async () => {
+  const sw = createHarness();
+  await sw.install();
+  sw.stored.delete('/offline.html');
+  sw.setOnline(false);
+  const response = await sw.request('/uncached-offline-route', 'navigate');
+  assert.equal(response.status, 503);
+  assert.match(await response.text(), /You\\'re offline\\./);
+  assert.match(response.headers.get('content-type'), /text\\/html/i);
 });

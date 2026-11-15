@@ -1,5 +1,6 @@
 const CACHE_NAME = 'tcs-uploadfit-shell-__CACHE_VERSION__';
-const SHELL_FILES = [
+
+const REQUIRED_SHELL_FILES = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
@@ -12,16 +13,20 @@ const SHELL_FILES = [
   '/src/edition.js',
   '/src/zip.js',
   '/src/i18n.js',
+  '/offline.html',
+  '/src/offline.css'
+];
+
+const OPTIONAL_SHELL_FILES = [
   '/assets/icon.svg',
   '/assets/icon-192.png',
   '/assets/icon-512.png',
   '/assets/icon-maskable-512.png',
-  '/offline.html',
-  '/src/offline.css',
   '/privacy.html',
   '/terms.html'
 ];
-const NETWORK_FIRST_EXTENSIONS = /\.(?:m?js|css)$/i;
+
+const NETWORK_FIRST_EXTENSIONS = /\\.(?:m?js|css)$/i;
 
 async function storeResponse(request, response) {
   if (!response || !response.ok || response.type === 'opaque') return response;
@@ -30,38 +35,102 @@ async function storeResponse(request, response) {
   return response;
 }
 
+function offlineDocument(request) {
+  const acceptedLanguages = request.headers?.get?.('accept-language') || '';
+  const isIndonesian = /\\bid\\b/i.test(acceptedLanguages);
+  const title = isIndonesian ? 'Anda sedang offline.' : "You're offline.";
+  const description = isIndonesian
+    ? 'Hubungkan kembali perangkat ke internet, lalu muat ulang TCS UploadFit. Setelah aplikasi terbuka, pemrosesan gambar berjalan langsung di perangkat.'
+    : 'Reconnect your device to the internet and reload TCS UploadFit. Once the app has loaded, image preparation works locally on your device.';
+  const html = `<!doctype html>
+<html lang="${isIndonesian ? 'id' : 'en'}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171916">
+  <title>TCS UploadFit | Offline</title>
+  <link rel="stylesheet" href="/src/offline.css">
+</head>
+<body>
+  <main class="card">
+    <h1>${title}</h1>
+    <p>${description}</p>
+  </main>
+</body>
+</html>`;
+  return new Response(html, {
+    status: 503,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store'
+    }
+  });
+}
+
+function unavailableAssetResponse(request) {
+  const pathname = new URL(request.url).pathname;
+  const contentType = /\\.m?js$/i.test(pathname)
+    ? 'text/javascript; charset=utf-8'
+    : /\\.css$/i.test(pathname)
+      ? 'text/css; charset=utf-8'
+      : 'text/plain; charset=utf-8';
+  return new Response('', {
+    status: 503,
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'no-store'
+    }
+  });
+}
+
+async function offlineFallback(request, fallbackPath) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  if (fallbackPath) {
+    const fallback = await caches.match(fallbackPath);
+    if (fallback) return fallback;
+    return offlineDocument(request);
+  }
+
+  return unavailableAssetResponse(request);
+}
+
 async function networkFirst(request, fallbackPath) {
   try {
     const response = await fetch(request);
-    if (response.ok) await storeResponse(request, response);
-    return response;
-  } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    if (fallbackPath) {
-      const fallback = await caches.match(fallbackPath);
-      if (fallback) return fallback;
+    if (response.ok) return await storeResponse(request, response);
+    if (fallbackPath && response.status >= 500) {
+      return offlineFallback(request, fallbackPath);
     }
-    return new Response('This page or asset is unavailable offline.', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-    });
+    return response;
+  } catch {
+    return offlineFallback(request, fallbackPath);
   }
+}
+
+async function cacheShellFile(cache, file) {
+  const response = await fetch(file, { cache: 'reload' });
+  if (!response.ok) throw new Error(`HTTP ${response.status} for ${file}`);
+  await cache.put(file, response);
 }
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const results = await Promise.allSettled(SHELL_FILES.map(async file => {
-      const response = await fetch(file, { cache: 'reload' });
-      if (!response.ok) throw new Error(`HTTP ${response.status} for ${file}`);
-      await cache.put(file, response);
-    }));
-    results.forEach((result, index) => {
+
+    // Do not activate a worker that cannot serve the complete application shell.
+    await Promise.all(REQUIRED_SHELL_FILES.map(file => cacheShellFile(cache, file)));
+
+    const optionalResults = await Promise.allSettled(
+      OPTIONAL_SHELL_FILES.map(file => cacheShellFile(cache, file))
+    );
+    optionalResults.forEach((result, index) => {
       if (result.status === 'rejected') {
-        console.error('[TCS UploadFit] App-shell asset was not cached:', SHELL_FILES[index], result.reason);
+        console.warn('[TCS UploadFit] Optional app-shell asset was not cached:', OPTIONAL_SHELL_FILES[index], result.reason);
       }
     });
+
     await self.skipWaiting();
   })());
 });
@@ -92,7 +161,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (!SHELL_FILES.includes(url.pathname)) return;
+  if (!REQUIRED_SHELL_FILES.includes(url.pathname) && !OPTIONAL_SHELL_FILES.includes(url.pathname)) return;
   event.respondWith((async () => {
     const cached = await caches.match(request);
     if (cached) return cached;

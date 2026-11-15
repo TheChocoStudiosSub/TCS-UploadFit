@@ -45,14 +45,21 @@ jobs:
         run: npm install --no-save --no-package-lock playwright@1.56.1
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Start local static server
+      - name: Build the same edition served by Vercel
+        run: npm run build:demo
+      - name: Start static servers for the production build and source smoke page
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/uploadfit-http.log 2>&1 &
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist/demo > /tmp/uploadfit-app-http.log 2>&1 &
+          python3 -m http.server 4174 --bind 127.0.0.1 --directory . > /tmp/uploadfit-source-http.log 2>&1 &
           for attempt in $(seq 1 20); do
-            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null && curl --fail --silent http://127.0.0.1:4174/tests/smoke.html > /dev/null; then exit 0; fi
             sleep 1
           done
-          cat /tmp/uploadfit-http.log
+          cat /tmp/uploadfit-app-http.log
+          cat /tmp/uploadfit-source-http.log
           exit 1
-      - name: Run browser smoke and end-to-end checks
+      - name: Run browser smoke, production-build and offline checks
+        env:
+          UPLOADFIT_BASE_URL: http://127.0.0.1:4173
+          UPLOADFIT_SMOKE_URL: http://127.0.0.1:4174/tests/smoke.html
         run: node tests/browser.e2e.mjs

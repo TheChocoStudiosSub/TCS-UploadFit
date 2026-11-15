@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 const baseUrl = process.env.UPLOADFIT_BASE_URL || 'http://127.0.0.1:4173';
+const smokeUrl = process.env.UPLOADFIT_SMOKE_URL || `${baseUrl}/tests/smoke.html`;
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ acceptDownloads: true });
 const errors = [];
@@ -15,10 +16,10 @@ context.on('page', page => {
 
 try {
   const smoke = await context.newPage();
-  await smoke.goto(`${baseUrl}/tests/smoke.html`, { waitUntil: 'load' });
+  await smoke.goto(smokeUrl, { waitUntil: 'load' });
   await smoke.waitForFunction(() => /browser checks passed/i.test(document.querySelector('#results')?.textContent || ''), null, { timeout: 30000 });
   const smokeText = await smoke.locator('#results').innerText();
-  assert.match(smokeText, /5\/5 browser checks passed/i, smokeText);
+  assert.match(smokeText, /5\\/5 browser checks passed/i, smokeText);
   await smoke.close();
 
   const page = await context.newPage();
@@ -74,13 +75,13 @@ try {
     page.waitForEvent('download'),
     page.locator('#download-selected').click()
   ]);
-  assert.match(singleDownload.suggestedFilename(), /uploadfit\.(jpg|png|webp)$/i);
+  assert.match(singleDownload.suggestedFilename(), /uploadfit\\.(jpg|png|webp)$/i);
 
   const [zipDownload] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('#download-all').click()
   ]);
-  assert.match(zipDownload.suggestedFilename(), /\.zip$/i);
+  assert.match(zipDownload.suggestedFilename(), /\\.zip$/i);
   const zipPath = await zipDownload.path();
   assert.ok(zipPath, 'ZIP download should produce a file');
   const fs = await import('node:fs/promises');
@@ -94,6 +95,23 @@ try {
   await page.locator('#delete-preset').click();
   await page.waitForFunction(() => document.querySelector('#delete-preset')?.disabled === true);
 
+  const offlinePage = await context.newPage();
+  await offlinePage.goto(baseUrl, { waitUntil: 'networkidle' });
+  await offlinePage.evaluate(async () => navigator.serviceWorker.ready);
+  await offlinePage.reload({ waitUntil: 'networkidle' });
+  await offlinePage.waitForFunction(() => Boolean(navigator.serviceWorker.controller), null, { timeout: 15000 });
+  const cachedShell = await offlinePage.evaluate(async () => ({
+    offlinePage: Boolean(await caches.match('/offline.html')),
+    appScript: Boolean(await caches.match('/src/app.js')),
+    stylesheet: Boolean(await caches.match('/src/styles.css'))
+  }));
+  assert.deepEqual(cachedShell, { offlinePage: true, appScript: true, stylesheet: true });
+  await context.setOffline(true);
+  await offlinePage.goto(`${baseUrl}/__uploadfit_offline_check__`, { waitUntil: 'domcontentloaded' });
+  await assertText(offlinePage, 'h1', "You're offline.");
+  await context.setOffline(false);
+  await offlinePage.close();
+
   assert.deepEqual(errors, [], `Browser page errors: ${errors.join('; ')}`);
   console.log('PASS browser smoke page');
   console.log('PASS Indonesian language switch');
@@ -101,6 +119,8 @@ try {
   console.log('PASS single-file download');
   console.log('PASS ZIP download and signature');
   console.log('PASS custom preset save and delete');
+  console.log('PASS production build app-shell caching');
+  console.log('PASS offline navigation fallback');
 } finally {
   await context.close();
   await browser.close();
