@@ -8,7 +8,6 @@
   <meta name="application-name" content="TCS UploadFit">
   <meta name="color-scheme" content="light">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/src/styles.css">
   <title>TCS UploadFit — Demo TCS</title>
 </head>
@@ -16,14 +15,11 @@
   <div class="app-frame">
     <header class="masthead">
       <a class="brand" href="#top" aria-label="TCS UploadFit home">
-        <span class="brand-symbol" aria-hidden="true">
-          <svg viewBox="0 0 48 48" role="img"><path d="M8 18V8h10M30 8h10v10M40 30v10H30M18 40H8V30"/><path d="M17 17h14v14H17z"/><path d="M21 24h6"/></svg>
-        </span>
-        <span class="brand-wordmark"><span class="brand-overline">THE CHOCO STUDIOS / UTILITY 001</span><strong>UPLOAD<span>FIT</span></strong></span>
+        <span class="brand-wordmark"><span class="brand-overline">THE CHOCO STUDIOS</span><strong>TCS UploadFit</strong></span>
       </a>
       <div class="masthead-meta">
         <span class="meta-code">TCS DEMO / PUBLIC PREVIEW</span>
-        <span class="ready-light"><i></i><span data-i18n="localReady">LOCAL PROCESSING READY</span></span>
+        <span class="ready-light" data-i18n="localReady">LOCAL PROCESSING</span>
         <label class="language-picker"><span class="sr-only" data-i18n="language">Language</span><select id="language-select" aria-label="Language"><option value="en">EN</option><option value="id">ID</option></select></label>
       </div>
     </header>
@@ -31,31 +27,25 @@
     <main id="top">
       <section class="intro-strip" aria-labelledby="page-title">
         <div class="intro-copy">
-          <div class="eyebrow"><span>01</span><span class="eyebrow-rule"></span><span data-i18n="eyebrow">IMAGE INTAKE / OUTPUT CONTROL</span></div>
           <h1 id="page-title"><span data-i18n="headlineA">Files in.</span><br><em data-i18n="headlineB">Requirements out.</em></h1>
           <p data-i18n="introText">Set the dimensions. Set the ceiling. Keep the original untouched.</p>
-        </div>
-        <div class="intro-stamp" aria-label="A local image processing tool">
-          <span class="stamp-ring">TCS · LOCAL · TCS · LOCAL ·</span>
-          <strong>100<span>%</span></strong>
-          <small data-i18n="deviceStamp">ON-DEVICE<br>WORKFLOW</small>
         </div>
       </section>
 
       <section class="workbench" aria-label="Image preparation workspace">
         <aside class="recipe-column" aria-labelledby="recipe-heading">
           <div class="column-title">
-            <div><span class="section-number">A / 01</span><h2 id="recipe-heading" data-i18n="recipeTitle">Output recipe</h2></div>
-            <button id="reset-settings" class="bare-button reset-button" type="button" data-i18n="reset">RESET ↺</button>
+            <div><h2 id="recipe-heading" data-i18n="recipeTitle">Output recipe</h2></div>
+            <button id="reset-settings" class="bare-button reset-button" type="button" data-i18n="reset">RESET</button>
           </div>
 
           <div class="field-block preset-block">
             <label for="preset-select" data-i18n="preset">Start from a recipe</label>
-            <div class="select-shell"><select id="preset-select"><option value="custom" data-i18n="customRecipe">Your own settings</option><option value="email" data-i18n="emailRecipe">Email attachment · 1 MB</option><option value="web" data-i18n="webRecipe">Website image · 500 KB</option><option value="catalog" data-i18n="catalogRecipe">Product catalogue · 2 MB</option></select><span aria-hidden="true">↘</span></div>
+            <div class="select-shell"><select id="preset-select"><option value="custom" data-i18n="customRecipe">Your own settings</option><option value="email" data-i18n="emailRecipe">Email attachment · 1 MB</option><option value="web" data-i18n="webRecipe">Website image · 500 KB</option><option value="catalog" data-i18n="catalogRecipe">Product catalogue · 2 MB</option></select></div>
             <p class="field-note" data-i18n="presetNote">Starting points, not rules issued by a destination.</p>
           </div>
 
-          <div class="recipe-rule"><span>01</span><span data-i18n="frameSection">FRAME / PIXEL DIMENSIONS</span></div>
+          <div class="recipe-rule"><span data-i18n="frameSection">FRAME / PIXEL DIMENSIONS</span></div>
           <div class="dimension-row">
             <div class="field-block"><label for="width-input" data-i18n="width">Width</label><div class="number-shell"><input id="width-input" type="number" min="1" max="16000" inputmode="numeric" placeholder="Auto"><span>PX</span></div></div>
             <div class="dimension-cross" aria-hidden="true">×</div>
@@ -67,24 +57,24 @@
           <div class="field-block mode-block">
             <span class="field-label" data-i18n="frameMode">When both sides are set</span>
             <div class="mode-switch" role="group" aria-label="Frame mode">
-              <button type="button" data-mode="fit" class="mode-button active" aria-pressed="true"><span>01</span><b data-i18n="fitMode">FIT</b></button>
-              <button type="button" data-mode="fill" class="mode-button" aria-pressed="false"><span>02</span><b data-i18n="fillMode">CROP</b></button>
-              <button type="button" data-mode="stretch" class="mode-button" aria-pressed="false"><span>03</span><b data-i18n="stretchMode">STRETCH</b></button>
+              <button type="button" data-mode="fit" class="mode-button active" aria-pressed="true"><b data-i18n="fitMode">FIT</b></button>
+              <button type="button" data-mode="fill" class="mode-button" aria-pressed="false"><b data-i18n="fillMode">CROP</b></button>
+              <button type="button" data-mode="stretch" class="mode-button" aria-pressed="false"><b data-i18n="stretchMode">STRETCH</b></button>
             </div>
             <p class="field-note" id="mode-note" data-i18n="fitNote">Fit keeps the whole image inside the frame. Empty space may remain.</p>
           </div>
 
-          <div class="recipe-rule"><span>02</span><span data-i18n="fileSection">FILE / SIZE CEILING</span></div>
+          <div class="recipe-rule"><span data-i18n="fileSection">FILE / SIZE CEILING</span></div>
           <div class="field-block">
             <label for="max-size" data-i18n="maxFileSize">Maximum file size</label>
             <div class="size-control"><input id="max-size" type="number" min="0.01" max="100" step="0.01" placeholder="No limit"><select id="size-unit" aria-label="File size unit"><option value="KB">KB</option><option value="MB" selected>MB</option></select></div>
             <p class="field-note" data-i18n="sizeNote">If dimensions are fixed, UploadFit will not quietly change them to hit this limit.</p>
           </div>
 
-          <div class="recipe-rule"><span>03</span><span data-i18n="formatSection">FORMAT / FINISH</span></div>
+          <div class="recipe-rule"><span data-i18n="formatSection">FORMAT / FINISH</span></div>
           <div class="field-block">
             <label for="format-select" data-i18n="outputFormat">Output format</label>
-            <div class="select-shell"><select id="format-select"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option><option value="image/png">PNG · lossless</option><option value="original" data-i18n="keepSource">Keep supported source</option></select><span aria-hidden="true">↘</span></div>
+            <div class="select-shell"><select id="format-select"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option><option value="image/png">PNG · lossless</option><option value="original" data-i18n="keepSource">Keep supported source</option></select></div>
           </div>
           <div class="field-block quality-block" id="quality-block">
             <div class="range-heading"><label for="quality-range" data-i18n="quality">Encoding quality</label><output id="quality-value" for="quality-range">86%</output></div>
@@ -97,45 +87,43 @@
           </div>
 
           <div class="recipe-foot">
-            <div class="privacy-serial"><span class="privacy-symbol">◎</span><div><strong data-i18n="localOnly">LOCAL BY DESIGN</strong><small data-i18n="localOnlyNote">Your images are not sent to a server.</small></div></div>
+            <div class="privacy-serial"><div><strong data-i18n="localOnly">LOCAL BY DESIGN</strong><small data-i18n="localOnlyNote">Your images are not sent to a server.</small></div></div>
             <button id="save-preset" class="text-action" type="button"><span>＋</span><span data-i18n="saveRecipe">Save this recipe</span></button>
           </div>
         </aside>
 
         <section class="production-column" aria-label="Image intake and output">
           <div class="intake-panel">
-            <div class="intake-label"><span class="section-number">B / 02</span><span data-i18n="intakeTitle">Image intake</span><span class="intake-accepted">JPG / PNG / WEBP / BMP / AVIF</span></div>
+            <div class="intake-label"><span data-i18n="intakeTitle">Image intake</span><span class="intake-accepted">JPG / PNG / WEBP / BMP / AVIF</span></div>
             <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/avif,.jpg,.jpeg,.png,.webp,.bmp,.avif" multiple hidden>
             <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Add images">
-              <div class="drop-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-              <div class="drop-illustration" aria-hidden="true"><span class="frame-back"></span><span class="frame-front"><i></i><b>+</b></span></div>
               <div class="drop-copy"><strong data-i18n="dropHeadline">Put the files on the table.</strong><span data-i18n="dropSubhead">Drop images here, or browse from your device.</span></div>
-              <button id="browse-files" class="browse-button" type="button"><span data-i18n="browseFiles">BROWSE FILES</span><span>↗</span></button>
-              <div class="drop-foot"><span data-i18n="fileRules">Up to 5 images · 10 MB each · 50 MB total output</span><span>01—05</span></div>
+              <button id="browse-files" class="browse-button" type="button" data-i18n="browseFiles">BROWSE FILES</button>
+              <div class="drop-foot"><span data-i18n="fileRules">Up to 5 images · 10 MB each · 50 MB total output</span></div>
             </div>
           </div>
 
           <div class="production-grid">
             <section class="jobs-panel" aria-labelledby="jobs-heading">
               <div class="panel-bar">
-                <div><span class="section-number">C / 03</span><h2 id="jobs-heading" data-i18n="queueTitle">Job queue</h2></div>
+                <div><h2 id="jobs-heading" data-i18n="queueTitle">Job queue</h2></div>
                 <div class="queue-count"><strong id="queue-count">00</strong><span data-i18n="filesLabel">FILES</span></div>
               </div>
               <div class="queue-toolbar"><span id="queue-summary" data-i18n="queueEmpty">Waiting for files</span><button id="clear-files" class="bare-button" type="button" disabled data-i18n="clearQueue">CLEAR QUEUE</button></div>
               <div class="queue-head"><span data-i18n="sourceFile">SOURCE FILE</span><span data-i18n="sourceSize">SOURCE SIZE</span><span data-i18n="jobStatus">STATUS</span><span class="sr-only" data-i18n="actions">Actions</span></div>
               <ol id="queue-list" class="queue-list" aria-live="polite">
-                <li class="queue-empty"><span class="empty-index">—</span><span data-i18n="queuePlaceholder">Your images will appear here, in the order they are added.</span></li>
+                <li class="queue-empty"><span data-i18n="queuePlaceholder">Your images will appear here, in the order they are added.</span></li>
               </ol>
               <div class="queue-bottom"><span data-i18n="queueHint">Select a row to inspect its source and prepared file.</span><span id="queue-selected">—</span></div>
             </section>
 
             <section class="proof-panel" aria-labelledby="proof-heading">
               <div class="panel-bar proof-title-bar">
-                <div><span class="section-number">D / 04</span><h2 id="proof-heading" data-i18n="proofTitle">Output proof</h2></div>
+                <div><h2 id="proof-heading" data-i18n="proofTitle">Output proof</h2></div>
                 <span id="proof-state" class="proof-state">NO FILE SELECTED</span>
               </div>
               <div class="proof-view" id="proof-view">
-                <div class="proof-empty" id="proof-empty"><span class="proof-cross">＋</span><p data-i18n="proofEmpty">Choose an image to inspect the source. Process it to see the output.</p></div>
+                <div class="proof-empty" id="proof-empty"><p data-i18n="proofEmpty">Choose an image to inspect the source. Process it to see the output.</p></div>
                 <div class="comparison" id="comparison" hidden>
                   <div class="comparison-cell"><div class="comparison-label"><span data-i18n="before">BEFORE</span><span id="source-dimensions">—</span></div><div class="image-window source-window"><img id="source-preview" alt="Source image preview"></div><div class="comparison-size" id="source-size">—</div></div>
                   <div class="comparison-cell"><div class="comparison-label"><span data-i18n="after">AFTER</span><span id="output-dimensions">—</span></div><div class="image-window output-window"><img id="output-preview" alt="Prepared image preview" hidden><span id="output-wait" class="image-wait" data-i18n="outputPending">Not prepared</span></div><div class="comparison-size" id="output-size">—</div></div>
@@ -143,13 +131,13 @@
               </div>
               <div class="proof-readout" id="proof-readout"><span data-i18n="proofReadout">OUTPUT WILL BE VERIFIED AFTER PROCESSING</span><strong id="proof-message">—</strong></div>
               <div class="proof-actions">
-                <button id="process-all" class="process-button" type="button" disabled><span class="button-number">→</span><span data-i18n="prepareAll">PREPARE QUEUE</span><span class="button-end">01</span></button>
+                <button id="process-all" class="process-button" type="button" disabled><span data-i18n="prepareAll">PREPARE QUEUE</span></button>
                 <div class="export-actions"><button id="download-selected" class="export-button" type="button" disabled data-i18n="saveSelected">SAVE FILE</button><button id="download-all" class="export-button export-all" type="button" disabled data-i18n="exportBatch">EXPORT ZIP</button></div>
               </div>
             </section>
           </div>
 
-          <div class="bottom-note"><span class="note-mark">!</span><p data-i18n="technicalNote">Technical checks cover file type, dimensions and file size. They do not certify photo content or guarantee acceptance by a destination.</p><span class="build-number">TCS / UF—001</span></div>
+          <div class="bottom-note"><p data-i18n="technicalNote">Technical checks cover file type, dimensions and file size. They do not certify photo content or guarantee acceptance by a destination.</p></div>
         </section>
       </section>
     </main>
@@ -164,7 +152,7 @@
       <p data-i18n="saveRecipeIntro">Give these output settings a name. They stay on this device.</p>
       <label for="preset-name" data-i18n="recipeName">Recipe name</label>
       <input id="preset-name" maxlength="40" required autocomplete="off" placeholder="e.g. Shop product images">
-      <div class="dialog-actions"><button id="cancel-preset" class="bare-button" type="button" data-i18n="cancel">CANCEL</button><button id="confirm-preset" class="dialog-save" type="submit" data-i18n="save">SAVE RECIPE ↗</button></div>
+      <div class="dialog-actions"><button id="cancel-preset" class="bare-button" type="button" data-i18n="cancel">CANCEL</button><button id="confirm-preset" class="dialog-save" type="submit" data-i18n="save">SAVE RECIPE</button></div>
     </form>
   </dialog>
 

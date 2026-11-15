@@ -201,11 +201,6 @@ function renderQueue() {
 
       const source = document.createElement('span');
       source.className = 'file-source';
-      const thumb = document.createElement('img');
-      thumb.className = 'file-thumb';
-      thumb.src = item.sourceUrl;
-      thumb.alt = '';
-      thumb.loading = 'lazy';
       const text = document.createElement('span');
       text.style.minWidth = '0';
       const name = document.createElement('span');
@@ -216,7 +211,7 @@ function renderQueue() {
       detail.className = 'file-detail';
       detail.textContent = `${String(index + 1).padStart(2, '0')} · ${fileKind(item.file)}`;
       text.append(name, detail);
-      source.append(thumb, text);
+      source.append(text);
 
       const size = document.createElement('span');
       size.className = 'row-size';
@@ -230,7 +225,7 @@ function renderQueue() {
       const remove = document.createElement('button');
       remove.type = 'button';
       remove.className = 'remove-row';
-      remove.textContent = '×';
+      remove.textContent = tr('remove');
       remove.setAttribute('aria-label', `${tr('remove')} ${item.file.name}`);
       remove.disabled = processing;
       remove.addEventListener('click', event => { event.stopPropagation(); removeItem(item.id); });
