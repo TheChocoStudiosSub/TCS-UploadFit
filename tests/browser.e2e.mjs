@@ -17,7 +17,7 @@ try {
 
   const page = await context.newPage();
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
-  await page.waitForSelector('#file-input');
+  await page.locator('#file-input').waitFor({ state: 'attached' });
 
   await page.locator('#language-select').selectOption('id');
   await assertText(page, '#page-title', 'Persiapkan gambar untuk diunggah.');
