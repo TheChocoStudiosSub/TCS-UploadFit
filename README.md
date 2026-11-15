@@ -6,7 +6,7 @@
 
 ## Official brand asset
 
-The approved horizontal logo is stored at `assets/logo tcs upload fit.jpg` and is used by the application header. The app icon in `assets/icon.svg` references the same approved logo.
+The approved horizontal logo is stored at `assets/logo tcs upload fit.jpg` and is used by the application header. The app icon in `assets/icon.svg` uses the matching cloud-and-arrow symbol from the approved brand direction.
 
 ## Product principles
 
