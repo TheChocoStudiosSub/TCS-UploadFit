@@ -100,7 +100,8 @@ function readSettings() {
 }
 
 function writeSettings(settings) {
-  const value = { ...DEFAULT_SETTINGS, ...settings };
+  const targetMode = settings.targetMode || (Object.hasOwn(settings, 'mode') ? 'frame' : 'max');
+  const value = { ...DEFAULT_SETTINGS, ...settings, targetMode };
   previousSizeUnit = value.sizeUnit || 'MB';
   $('#width-input').value = value.width ?? '';
   $('#height-input').value = value.height ?? '';
@@ -110,12 +111,12 @@ function writeSettings(settings) {
   $('#quality-range').value = String(value.quality ?? 86);
   $('#quality-value').textContent = `${value.quality ?? 86}%`;
   $('#background-color').value = value.background || '#f4f0e7';
-  $('.target-mode-button').forEach(button => {
+  $$('.target-mode-button').forEach(button => {
     const active = button.dataset.targetMode === (value.targetMode || (settings.mode ? 'frame' : 'max'));
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   });
-  $('.mode-button').forEach(button => {
+  $$('.mode-button').forEach(button => {
     const active = button.dataset.mode === (value.mode || 'fit');
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
@@ -440,7 +441,7 @@ async function processQueue() {
   let failed = 0;
   const pending = queue.filter(item => item.status !== 'done');
   controls.forEach(selector => { $(selector).disabled = true; });
-  $('.mode-button, .target-mode-button').forEach(button => { button.disabled = true; });
+  $$('.mode-button, .target-mode-button').forEach(button => { button.disabled = true; });
   $('#cancel-process').hidden = false;
   $('#cancel-process').disabled = false;
 
@@ -489,7 +490,7 @@ async function processQueue() {
     processController = null;
     processing = false;
     controls.forEach(selector => { $(selector).disabled = false; });
-    $('.mode-button, .target-mode-button').forEach(button => { button.disabled = false; });
+    $$('.mode-button, .target-mode-button').forEach(button => { button.disabled = false; });
     $('#cancel-process').hidden = true;
     $('#cancel-process').disabled = true;
     try {
@@ -639,8 +640,8 @@ function handleSettingsEvents() {
     $('#quality-value').textContent = `${$('#quality-range').value}%`;
     settingsChanged();
   });
-  $('.target-mode-button').forEach(button => button.addEventListener('click', () => {
-    $('.target-mode-button').forEach(choice => {
+  $$('.target-mode-button').forEach(button => button.addEventListener('click', () => {
+    $$('.target-mode-button').forEach(choice => {
       const active = choice === button;
       choice.classList.toggle('active', active);
       choice.setAttribute('aria-pressed', String(active));
@@ -648,8 +649,8 @@ function handleSettingsEvents() {
     updateModeNote();
     settingsChanged();
   }));
-  $('.mode-button').forEach(button => button.addEventListener('click', () => {
-    $('.mode-button').forEach(choice => {
+  $$('.mode-button').forEach(button => button.addEventListener('click', () => {
+    $$('.mode-button').forEach(choice => {
       const active = choice === button;
       choice.classList.toggle('active', active);
       choice.setAttribute('aria-pressed', String(active));
@@ -716,6 +717,8 @@ function handleFileEvents() {
 }
 
 function boot() {
+  $('#width-input').max = String(EDITION.maxOutputEdge);
+  $('#height-input').max = String(EDITION.maxOutputEdge);
   $('#source-preview').addEventListener('load', event => {
     const image = event.currentTarget;
     const item = itemById(selectedId);

@@ -34,6 +34,7 @@ test('build script produces independently configured demo and Store outputs', as
       assert.equal(buildInfo.edition, id);
       assert.ok(html.includes(`<title>${EDITIONS[id].title.en}</title>`));
       assert.ok(html.includes(`content="${EDITIONS[id].description.en}"`));
+      assert.ok(html.includes(`max="${EDITIONS[id].maxOutputEdge}"`));
       assert.ok(activeEdition.includes(`ACTIVE_EDITION = '${id}'`));
       assert.ok(sw.includes(`tcs-uploadfit-shell-${id}-v`));
       assert.ok(!sw.includes('__CACHE_VERSION__'));

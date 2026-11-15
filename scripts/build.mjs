@@ -63,7 +63,8 @@ async function buildEdition(id) {
   let html = await readFile(indexFile, 'utf8');
   html = html.replace('__EDITION_TITLE__', edition.title.en);
   html = html.replace('__EDITION_DESCRIPTION__', edition.description.en);
-  if (html.includes('__EDITION_')) throw new Error('An edition placeholder was not replaced.');
+  html = html.replaceAll('__MAX_OUTPUT_EDGE__', String(edition.maxOutputEdge));
+  if (html.includes('__EDITION_') || html.includes('__MAX_OUTPUT_EDGE__')) throw new Error('An edition placeholder was not replaced.');
   await writeFile(indexFile, html);
 
   const workerFile = path.join(destination, 'sw.js');
