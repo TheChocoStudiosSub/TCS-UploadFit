@@ -269,16 +269,13 @@ function renderSelected() {
   const empty = $('#proof-empty');
   const comparison = $('#comparison');
   const proofState = $('#proof-state');
-  const readout = $('#proof-message');
 
   if (!item) {
     empty.hidden = false;
     comparison.hidden = true;
     proofState.textContent = tr('notSelected');
     proofState.className = 'proof-state';
-    readout.textContent = '—';
     $('#download-selected').disabled = true;
-    $('#proof-readout').querySelector('span').textContent = tr('proofReadout');
     return;
   }
 
@@ -298,9 +295,6 @@ function renderSelected() {
     $('#output-size').textContent = formatBytes(item.result.size);
     proofState.textContent = item.result.metLimit ? tr('preparedState') : tr('limitMissed');
     proofState.className = `proof-state ${item.result.metLimit ? 'state-good' : 'state-bad'}`;
-    $('#proof-readout').querySelector('span').textContent = item.result.metLimit ? tr('limitMet') : tr('limitMissed');
-    const delta = item.result.reduction;
-    readout.textContent = item.result.warning || `${formatDimensions(item.result.width, item.result.height)} · ${delta >= 0 ? `${delta.toFixed(1)}% smaller` : `${Math.abs(delta).toFixed(1)}% larger`} than source`;
   } else {
     outputImage.hidden = true;
     outputImage.removeAttribute('src');
@@ -309,8 +303,6 @@ function renderSelected() {
     $('#output-size').textContent = tr('outputPending');
     proofState.textContent = item.status === 'error' ? tr('error') : tr('sourceOnly');
     proofState.className = `proof-state ${item.status === 'error' ? 'state-bad' : ''}`;
-    $('#proof-readout').querySelector('span').textContent = tr('proofReadout');
-    readout.textContent = item.error || tr('noOutput');
   }
 
   $('#download-selected').disabled = !item.result || processing;
