@@ -6,8 +6,8 @@ const message = (key, language, vars) => translate(key, language, vars);
 const SUPPORTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/avif']);
 const SUPPORTED_EXTENSIONS = /\.(jpe?g|png|webp|bmp|avif)$/i;
 export const MAX_FILE_BYTES = EDITION.maxInputBytes;
-export const MAX_IMAGE_PIXELS = 50_000_000;
-export const MAX_OUTPUT_EDGE = 16_000;
+export const MAX_IMAGE_PIXELS = EDITION.maxImagePixels;
+export const MAX_OUTPUT_EDGE = EDITION.maxOutputEdge;
 export const MIN_LOSSY_QUALITY = 0.65;
 
 export function formatBytes(bytes, decimals = 1) {

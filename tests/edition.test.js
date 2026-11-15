@@ -8,12 +8,12 @@ import { EDITIONS } from '../src/edition.js';
 
 test('edition limits are distinct and internally consistent', () => {
   assert.deepEqual(
-    [EDITIONS.demo.maxImages, EDITIONS.demo.maxInputBytes, EDITIONS.demo.maxBatchOutputBytes],
-    [5, 10 * 1024 * 1024, 50 * 1024 * 1024]
+    [EDITIONS.demo.maxImages, EDITIONS.demo.maxInputBytes, EDITIONS.demo.maxBatchOutputBytes, EDITIONS.demo.maxImagePixels, EDITIONS.demo.maxOutputEdge],
+    [5, 10 * 1024 * 1024, 50 * 1024 * 1024, 20_000_000, 16_000]
   );
   assert.deepEqual(
-    [EDITIONS.store.maxImages, EDITIONS.store.maxInputBytes, EDITIONS.store.maxBatchOutputBytes],
-    [10, 20 * 1024 * 1024, 80 * 1024 * 1024]
+    [EDITIONS.store.maxImages, EDITIONS.store.maxInputBytes, EDITIONS.store.maxBatchOutputBytes, EDITIONS.store.maxImagePixels, EDITIONS.store.maxOutputEdge],
+    [5, 15 * 1024 * 1024, 40 * 1024 * 1024, 20_000_000, 16_000]
   );
   assert.equal(EDITIONS.demo.showDemoBadge, true);
   assert.equal(EDITIONS.store.showDemoBadge, false);

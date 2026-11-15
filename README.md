@@ -14,7 +14,7 @@
 
 ## Public demo
 
-The public demo is built from `src/edition.js`: **5 images**, **10 MB per input image**, and **50 MB of prepared output per batch**. The Store build uses **10 images**, **20 MB per input image**, and **80 MB of prepared output per batch**. `npm run build` creates both editions from one configuration; `npm run build:demo` creates the public demo output.
+The public demo is built from `src/edition.js`: **5 images**, **10 MB per input image**, and **50 MB of prepared output per batch**. The Store build uses **5 images**, **15 MB per input image**, and **40 MB of prepared output per batch**. `npm run build` creates both editions from one configuration; `npm run build:demo` creates the public demo output.
 
 [Open Demo TCS](https://tcs-uploadfit.vercel.app/)
 
@@ -33,7 +33,7 @@ The public demo is built from `src/edition.js`: **5 images**, **10 MB per input 
 
 ## Supported inputs and limits
 
-JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. The demo accepts inputs up to 10 MB each and 50 MB of prepared output per batch. The Store edition accepts inputs up to 20 MB each and 80 MB of prepared output per batch. Maximum decoded and output dimensions are 50 megapixels. The underlying ZIP writer has a 256 MB safety ceiling, but the demo's lower batch cap applies first. Some formats depend on browser support.
+JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. The demo accepts inputs up to 10 MB each and 50 MB of prepared output per batch. The Store edition accepts inputs up to 15 MB each and 40 MB of prepared output per batch. Both editions limit each decoded image to 20 megapixels and output edges to 16,000 pixels. The ZIP export uses the same edition-specific batch limit; its uncompressed output is assembled in memory, so the batch cap is deliberately conservative. Some formats depend on browser support.
 
 ## Build editions
 
@@ -58,6 +58,10 @@ npm test
 ```
 
 For browser image-pipeline checks, serve the project and open `/tests/smoke.html`. The browser suite covers decode, resize, format export and ZIP signatures.
+
+## Public URL and Store edition access
+
+The Store build is a separate static edition, not a protected license. Do not deploy `dist/store` to a public URL and expect the edition limits or missing demo badge to prevent access. Anyone who can reach a public static deployment can load its files. Keep the Store build for packaging and submission. A separate web release would need server-verified accounts or entitlements, and client-side checks alone are not a reliable access barrier.
 
 ## Microsoft Store path
 

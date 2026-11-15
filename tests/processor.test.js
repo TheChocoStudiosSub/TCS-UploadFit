@@ -129,7 +129,7 @@ test('oversized PNG is rejected from its header before image decode', async () =
   globalThis.createImageBitmap = async () => { decodeCalled = true; throw new Error('should not decode'); };
   try {
     const file = Object.assign(new Blob([png], { type: 'image/png' }), { name: 'oversized.png' });
-    await assert.rejects(processImage(file, base), /50-megapixel/);
+    await assert.rejects(processImage(file, base), /20-megapixel/);
     assert.equal(decodeCalled, false);
   } finally {
     globalThis.createImageBitmap = previous;

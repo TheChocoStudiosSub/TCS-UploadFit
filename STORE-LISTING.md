@@ -18,7 +18,7 @@ Choose the output dimensions, frame behaviour, format and maximum file size. Add
 - Export PNG when lossless output is required.
 - Convert JPEG, PNG and WebP; BMP and AVIF may be accepted when the installed browser can decode them.
 - Set a maximum file-size target and verify whether the result meets it.
-- Process up to 10 selected images sequentially, with a maximum 20 MB input file and 80 MB prepared-output batch.
+- Process up to 5 selected images sequentially, with a maximum 15 MB input file and 40 MB prepared-output batch.
 - Save personal output recipes on the device.
 - Use English or Indonesian.
 
@@ -26,7 +26,7 @@ Choose the output dimensions, frame behaviour, format and maximum file size. Add
 Image decoding and processing happen locally. Selected images are not uploaded to TCS or a third-party conversion service. Original files are not overwritten. Exported files are re-encoded and do not intentionally retain source EXIF metadata.
 
 ### Limits and honest checks
-A file-size target cannot always be met at fixed dimensions. PNG is lossless and does not use the lossy quality control. Animated GIF and SVG are not supported. The Store edition accepts up to 10 images, 20 MB per input image, and 80 MB of prepared output per batch. The 50-megapixel per-image decode limit remains a separate safety ceiling.
+A file-size target cannot always be met at fixed dimensions. PNG is lossless and does not use the lossy quality control. Animated GIF and SVG are not supported. The Store edition accepts up to 5 images, 15 MB per input image, and 40 MB of prepared output per batch. Each decoded image is limited to 20 megapixels. Output edges are limited to 16,000 pixels.
 
 UploadFit checks technical file properties. It does not guarantee acceptance by a website or institution and does not perform biometric, legal, authenticity or content checks. Destination requirements can change; verify them with the destination before submitting.
 

@@ -79,7 +79,9 @@ async function buildEdition(id) {
     sourceHash,
     maxImages: edition.maxImages,
     maxInputBytes: edition.maxInputBytes,
-    maxBatchOutputBytes: edition.maxBatchOutputBytes
+    maxBatchOutputBytes: edition.maxBatchOutputBytes,
+    maxImagePixels: edition.maxImagePixels,
+    maxOutputEdge: edition.maxOutputEdge
   }, null, 2) + '\n');
   console.log(`Built ${id}: ${edition.maxImages} images, ${edition.maxInputBytes} bytes/input, ${edition.maxBatchOutputBytes} bytes/output (${sourceHash}).`);
 }
