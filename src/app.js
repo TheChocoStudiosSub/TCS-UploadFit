@@ -386,6 +386,14 @@ function processImageInWorker(file, settings, signal) {
       finish();
       reject(abortError());
     };
+    const fallbackToMainThread = () => {
+      finish();
+      if (signal?.aborted) {
+        reject(abortError());
+        return;
+      }
+      processImage(file, settings, { signal, language }).then(resolve, reject);
+    };
     try {
       worker = new Worker(new URL('./processor.worker.js', import.meta.url), { type: 'module' });
       activeWorker = worker;
@@ -401,8 +409,8 @@ function processImageInWorker(file, settings, signal) {
         }
       };
       worker.onerror = event => {
-        finish();
-        reject(new Error(event.message || tr('imageError')));
+        event.preventDefault?.();
+        fallbackToMainThread();
       };
       worker.postMessage({ file, settings, language });
     } catch (error) {

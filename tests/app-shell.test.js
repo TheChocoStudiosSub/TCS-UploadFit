@@ -77,7 +77,7 @@ test('processing controls restore after errors and language changes refresh the 
 test('size behaviour offers maximum size and exact frame without a redundant enlargement toggle', () => {
   assert.ok(html.includes('data-target-mode="max"'));
   assert.ok(html.includes('data-target-mode="frame"'));
-  assert.ok(html.includes('id="frame-mode-controls" hidden'));
+  assert.match(html, /<div\\b(?=[^>]*\\bid="frame-mode-controls")(?=[^>]*\\shidden(?:\\s|>))[^>]*>/);
   assert.ok(!html.includes('id="no-upscale"'));
   assert.ok(app.includes("targetMode: $('.target-mode-button.active')"));
   assert.ok(processor.includes("targetMode === 'max'"));

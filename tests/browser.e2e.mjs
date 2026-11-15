@@ -5,7 +5,13 @@ const baseUrl = process.env.UPLOADFIT_BASE_URL || 'http://127.0.0.1:4173';
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ acceptDownloads: true });
 const errors = [];
-context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
+const consoleErrors = [];
+context.on('page', page => {
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+});
 
 try {
   const smoke = await context.newPage();
@@ -46,11 +52,23 @@ try {
   });
   await page.waitForFunction(() => document.querySelector('#process-all')?.disabled === false);
   await page.locator('#process-all').click();
-  await page.waitForFunction(() => document.querySelector('#download-selected')?.disabled === false, null, { timeout: 30000 }).catch(async () => {
-    const state = await page.locator('#toast').innerText().catch(() => '');
-    const queue = await page.locator('#queue-list').innerText().catch(() => '');
-    throw new Error(`Image did not reach a prepared state. Toast: ${state}. Queue: ${queue}`);
-  });
+  await page.waitForFunction(() => {
+    const ready = document.querySelector('#download-selected')?.disabled === false;
+    const failed = [...document.querySelectorAll('.queue-row .row-status')].some(node => node.classList.contains('error'));
+    return ready || failed;
+  }, null, { timeout: 30000 }).catch(() => {});
+  if (await page.locator('#download-selected').isDisabled()) {
+    const diagnostics = await page.evaluate(() => ({
+      toast: document.querySelector('#toast-region')?.innerText || '',
+      proofState: document.querySelector('#proof-state')?.innerText || '',
+      proofMessage: document.querySelector('#proof-message')?.innerText || '',
+      queue: [...document.querySelectorAll('.queue-row')].map(row => ({
+        text: row.innerText,
+        error: row.querySelector('.row-status')?.title || ''
+      }))
+    }));
+    throw new Error(`Image did not reach a prepared state. Diagnostics: ${JSON.stringify(diagnostics)}. Browser errors: ${consoleErrors.join('; ')}. Page errors: ${errors.join('; ')}`);
+  }
 
   const [singleDownload] = await Promise.all([
     page.waitForEvent('download'),
