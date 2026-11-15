@@ -19,7 +19,7 @@ try {
   await smoke.goto(smokeUrl, { waitUntil: 'load' });
   await smoke.waitForFunction(() => /browser checks passed/i.test(document.querySelector('#results')?.textContent || ''), null, { timeout: 30000 });
   const smokeText = await smoke.locator('#results').innerText();
-  assert.match(smokeText, /5\\/5 browser checks passed/i, smokeText);
+  assert.match(smokeText, /5\/5 browser checks passed/i, smokeText);
   await smoke.close();
 
   const page = await context.newPage();
@@ -75,13 +75,13 @@ try {
     page.waitForEvent('download'),
     page.locator('#download-selected').click()
   ]);
-  assert.match(singleDownload.suggestedFilename(), /uploadfit\\.(jpg|png|webp)$/i);
+  assert.match(singleDownload.suggestedFilename(), /uploadfit\.(jpg|png|webp)$/i);
 
   const [zipDownload] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('#download-all').click()
   ]);
-  assert.match(zipDownload.suggestedFilename(), /\\.zip$/i);
+  assert.match(zipDownload.suggestedFilename(), /\.zip$/i);
   const zipPath = await zipDownload.path();
   assert.ok(zipPath, 'ZIP download should produce a file');
   const fs = await import('node:fs/promises');
@@ -94,7 +94,7 @@ try {
   await page.waitForFunction(() => document.querySelector('#delete-preset')?.disabled === false);
   await page.locator('#delete-preset').click();
   await page.waitForFunction(() => document.querySelector('#delete-preset')?.disabled === true);
-
+  await offlinePage.evaluate(async () => { await navigator.serviceWorker.ready; });
   const offlinePage = await context.newPage();
   await offlinePage.goto(baseUrl, { waitUntil: 'networkidle' });
   await offlinePage.evaluate(async () => navigator.serviceWorker.ready);

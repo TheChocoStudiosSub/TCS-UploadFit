@@ -148,6 +148,6 @@ test('navigation still returns a readable offline document if its cache entry is
   sw.setOnline(false);
   const response = await sw.request('/uncached-offline-route', 'navigate');
   assert.equal(response.status, 503);
-  assert.match(await response.text(), /You\\'re offline\\./);
-  assert.match(response.headers.get('content-type'), /text\\/html/i);
+  assert.match(await response.text(), /You're offline\./);
+  assert.match(response.headers.get('content-type'), /text\/html/i);
 });
