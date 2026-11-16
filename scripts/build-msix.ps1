@@ -25,21 +25,21 @@ foreach ($field in @("IdentityName", "Publisher", "PublisherDisplayName")) {
     $value = [string]$config.$field
     if ([string]::IsNullOrWhiteSpace($value) -or $value -match "^<.*>$") { throw "Set $field to the exact value shown in Partner Center." }
 }
-if ([string]$config.IdentityName -notmatch "^[A-Za-z0-9.\\-]{3,50}$") { throw "Invalid Partner Center IdentityName." }
+if ([string]$config.IdentityName -notmatch "^[A-Za-z0-9.\-]{3,50}$") { throw "Invalid Partner Center IdentityName." }
 if ([string]$config.Publisher -notmatch "^CN=.+") { throw "Publisher must be the exact CN value from Partner Center." }
 
 $version = "1.0.0.0"
 if ($config.Version) { $version = [string]$config.Version }
-if ($version -notmatch "^\\d+\\.\\d+\\.\\d+\\.\\d+$") { throw "Version must have four numeric components." }
+if ($version -notmatch "^\d+\.\d+\.\d+\.\d+$") { throw "Version must have four numeric components." }
 $packageName = "TCS-UploadFit"
 if ($config.PackageName) { $packageName = [string]$config.PackageName }
 if ($packageName -notmatch "^[A-Za-z0-9._-]+$") { throw "Invalid PackageName." }
 
 $sdkList = (& dotnet --list-sdks) -join ([Environment]::NewLine)
-if ($LASTEXITCODE -ne 0 -or $sdkList -notmatch "(?m)^10\\.") { throw ".NET 10 SDK is required." }
+if ($LASTEXITCODE -ne 0 -or $sdkList -notmatch "(?m)^10\.") { throw ".NET 10 SDK is required." }
 $kitsRoot = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\\10\\bin"
 $makeAppx = Get-ChildItem -LiteralPath $kitsRoot -Filter "MakeAppx.exe" -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -match "\\\\x64\\\\MakeAppx\\.exe$" } | Sort-Object FullName -Descending | Select-Object -First 1
+    Where-Object { $_.FullName -match "\\x64\\MakeAppx\.exe" } | Sort-Object FullName -Descending | Select-Object -First 1
 if (-not $makeAppx) { throw "MakeAppx.exe was not found. Install the Windows 10 SDK." }
 
 $workRoot = Join-Path $repoRoot "dist\\msix-work"
