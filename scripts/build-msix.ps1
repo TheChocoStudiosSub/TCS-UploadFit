@@ -106,7 +106,11 @@ $bundleManifest = @"
   </Packages>
 </Bundle>
 "@
-Set-Content -LiteralPath (Join-Path $bundlePackages "AppxBundleManifest.xml") -Value $bundleManifest -Encoding UTF8
+# MakeAppx requires the bundle manifest inside AppxMetadata; placing it at the
+# content root makes MakeAppx treat the XML as a package payload.
+$bundleMetadata = Join-Path $bundlePackages "AppxMetadata"
+New-Item -ItemType Directory -Force -Path $bundleMetadata | Out-Null
+Set-Content -LiteralPath (Join-Path $bundleMetadata "AppxBundleManifest.xml") -Value $bundleManifest -Encoding UTF8
 $bundlePath = Join-Path $msixDirectory ("{0}_{1}.msixbundle" -f $packageName, $version)
 & $makeAppx.FullName bundle /d $bundlePackages /p $bundlePath /o /v
 if ($LASTEXITCODE -ne 0) { throw "MakeAppx failed to create the x86/x64 MSIX bundle." }
