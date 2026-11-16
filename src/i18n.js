@@ -45,6 +45,8 @@ zipTooLarge:'A ZIP export is limited to {maxSize} per archive to keep device mem
 zipMissingData:'A ZIP item is missing its image data.',
 zipTooLargeForFormat:'This export is too large for a standard ZIP archive.',
 queueRefreshFailed:'Unable to refresh the image queue after processing.',
+sizeUnitChoice:'Choose KB or MB for the file-size unit.',
+outputEdgeLimit:'The output width and height must each be no more than {maxEdge} pixels.',
 
   },
   id: {
@@ -91,6 +93,8 @@ zipTooLarge:'Ukuran ekspor ZIP dibatasi {maxSize} agar penggunaan memori perangk
 zipMissingData:'Data gambar untuk salah satu item ZIP tidak tersedia.',
 zipTooLargeForFormat:'Ukuran ekspor ini melebihi batas format ZIP standar.',
 queueRefreshFailed:'Antrean gambar tidak dapat diperbarui setelah pemrosesan.',
+sizeUnitChoice:'Pilih KB atau MB sebagai satuan ukuran file.',
+outputEdgeLimit:'Lebar dan tinggi hasil masing-masing tidak boleh melebihi {maxEdge} piksel.',
 
   }
 };

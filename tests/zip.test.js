@@ -21,6 +21,7 @@ test('creates a valid uncompressed ZIP with UTF-8 filenames', async () => {
 
 test('rejects empty ZIP exports', async () => {
   await assert.rejects(() => createZip([]), /no completed images/);
+  await assert.rejects(() => createZip([null]), /missing its image data/);
 });
 
 
@@ -45,6 +46,8 @@ function readCentralDirectory(bytes) {
       name, localName, localOffset,
       centralCrc: view.getUint32(offset + 16, true),
       localCrc: view.getUint32(localOffset + 14, true),
+      data: bytes.subarray(localOffset + 30 + localNameLength + localExtraLength,
+        localOffset + 30 + localNameLength + localExtraLength + view.getUint32(localOffset + 22, true)),
       dosDate: view.getUint16(offset + 14, true),
       localDosDate: view.getUint16(localOffset + 12, true)
     });
@@ -64,6 +67,7 @@ test('central directory offsets and CRC values point to matching local entries',
   for (const entry of entries) {
     assert.equal(entry.localName, entry.name);
     assert.equal(entry.localCrc, entry.centralCrc);
+    assert.equal(crc32(entry.data), entry.centralCrc);
     assert.ok(entry.localOffset >= 0);
     assert.ok(entry.dosDate > 0);
     assert.equal(entry.localDosDate, entry.dosDate);
@@ -71,17 +75,26 @@ test('central directory offsets and CRC values point to matching local entries',
   assert.ok(entries[1].localOffset > entries[0].localOffset);
 });
 
-test('ZIP names avoid case-insensitive collisions and Windows-reserved names', async () => {
+test('ZIP names avoid case-insensitive collisions and common Windows-reserved names', async () => {
   const archive = await createZip([
     { name: 'Foto.jpg', blob: new Blob(['a']) },
     { name: 'foto.jpg', blob: new Blob(['b']) },
     { name: 'CON.txt', blob: new Blob(['c']) },
     { name: 'NUL.jpg', blob: new Blob(['d']) },
-    { name: 'trailing. ', blob: new Blob(['e']) }
+    { name: 'CONIN$.txt', blob: new Blob(['e']) }
   ]);
   const entries = readCentralDirectory(new Uint8Array(await archive.arrayBuffer()));
   assert.deepEqual(entries.map(entry => entry.name), [
-    'Foto.jpg', 'foto (2).jpg', '_CON.txt', '_NUL.jpg', 'trailing'
+    'Foto.jpg', 'foto (2).jpg', '_CON.txt', '_NUL.jpg', '_CONIN$.txt'
   ]);
   assert.equal(new Set(entries.map(entry => entry.name.toLocaleLowerCase('en-US'))).size, entries.length);
+
+  const uncommonReserved = await createZip([
+    { name: 'CONOUT$.txt', blob: new Blob(['f']) },
+    { name: 'COM¹.txt', blob: new Blob(['g']) },
+    { name: 'LPT².txt', blob: new Blob(['h']) },
+    { name: 'trailing. ', blob: new Blob(['i']) }
+  ]);
+  const extraNames = readCentralDirectory(new Uint8Array(await uncommonReserved.arrayBuffer())).map(entry => entry.name);
+  assert.deepEqual(extraNames, ['_CONOUT$.txt', '_COM¹.txt', '_LPT².txt', 'trailing']);
 });

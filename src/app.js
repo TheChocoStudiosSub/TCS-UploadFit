@@ -298,6 +298,8 @@ function renderSelected() {
   const readout = $('#proof-message');
 
   if (!item) {
+    $('#source-preview').removeAttribute('src');
+    $('#output-preview').removeAttribute('src');
     empty.hidden = false;
     comparison.hidden = true;
     proofState.textContent = tr('notSelected');
@@ -708,6 +710,11 @@ function handleFileEvents() {
     event.target.value = '';
   });
   const dropzone = $('#dropzone');
+  dropzone.addEventListener('keydown', event => {
+    if (event.target !== dropzone || processing || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    $('#file-input').click();
+  });
   ['dragenter', 'dragover'].forEach(type => dropzone.addEventListener(type, event => {
     event.preventDefault();
     if (processing) return;
@@ -750,12 +757,14 @@ function boot() {
   renderQueue();
   renderSelected();
   window.addEventListener('pagehide', () => {
+    $('#source-preview').removeAttribute('src');
+    $('#output-preview').removeAttribute('src');
     queue.forEach(item => {
       URL.revokeObjectURL(item.sourceUrl);
       if (item.outputUrl) URL.revokeObjectURL(item.outputUrl);
     });
   });
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  if (EDITION.enableServiceWorker && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
   }
 }

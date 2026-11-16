@@ -16,6 +16,11 @@ test('edition limits are distinct and internally consistent', () => {
     [5, 15 * 1024 * 1024, 40 * 1024 * 1024, 20_000_000, 16_000]
   );
   assert.equal(EDITIONS.demo.showDemoBadge, true);
+  assert.equal(EDITIONS.demo.enableServiceWorker, true);
+  assert.equal(EDITIONS.demo.tier, 'free');
+  assert.equal(EDITIONS.store.enableServiceWorker, false);
+  assert.equal(EDITIONS.store.tier, 'free');
+  assert.equal(EDITIONS.store.features.zipExport, true);
   assert.equal(EDITIONS.store.showDemoBadge, false);
 });
 
