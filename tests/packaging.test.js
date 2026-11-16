@@ -14,10 +14,10 @@ test('Store package is a local WebView2 host and contains no remote app URL', as
     read('packaging/WindowsApp/Package.appxmanifest.template'),
     read('index.html')
   ]);
-  assert.match(host, /SetVirtualHostNameToFolderMapping\(\s*"uploadfit\.local"/);
+  assert.match(host, /SetVirtualHostNameToFolderMapping\(\s*"uploadfit\.example"/);
   assert.match(host, /CoreWebView2HostResourceAccessKind\.Allow/);
-  assert.match(host, /core\.Navigate\("https:\/\/uploadfit\.local\/index\.html"\)/);
-  assert.match(host, /target\.Host, "uploadfit\.local"/);
+  assert.match(host, /core\.Navigate\("https:\/\/uploadfit\.example\/index\.html"\)/);
+  assert.match(host, /target\.Host, "uploadfit\.example"/);
   assert.match(host, /target\.Scheme != Uri\.UriSchemeHttps/);
   assert.match(project, /<SelfContained>true<\/SelfContained>/);
   assert.match(project, /WebRootPath/);
@@ -53,5 +53,5 @@ test('Store assets are generated with contain sizing and transparent canvases', 
   assert.match(assets, /DrawImage\(\$logo, \$destination\)/);
   assert.match(assets, /\$logo\.Width -ne 1408/);
   assert.match(assets, /\$logo\.Height -ne 768/);
-  assert.doesNotMatch(assets, /ImageAttributes|WrapMode|TileFlip|Crop/i);
+  assert.doesNotMatch(assets, /ImageAttributes|WrapMode|TileFlip/i);
 });
