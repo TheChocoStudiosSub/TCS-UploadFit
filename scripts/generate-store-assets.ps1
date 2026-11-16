@@ -12,11 +12,21 @@ if (-not (Test-Path -LiteralPath $SourceLogo -PathType Leaf)) {
 }
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
-$logo = [System.Drawing.Image]::FromFile((Resolve-Path -LiteralPath $SourceLogo))
+$expectedHash = "7324f9660e9f1ee27212982ec310e71f1475a8161846e396be2ada7eb5b764be"
+$actualHash = (Get-FileHash -LiteralPath $SourceLogo -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($actualHash -ne $expectedHash) {
+    throw "The logo source is not the original owner-supplied file. Replace assets\tcs-uploadfit-logo.jpg with the exact 1408x768 JPEG. Expected SHA-256: $expectedHash. Actual: $actualHash."
+}
+try {
+    $logo = [System.Drawing.Image]::FromFile((Resolve-Path -LiteralPath $SourceLogo))
+}
+catch {
+    throw "The owner-supplied logo could not be decoded as a JPEG. Replace assets\tcs-uploadfit-logo.jpg with the original file. Details: $($_.Exception.Message)"
+}
 if ($logo.Width -ne 1408 -or $logo.Height -ne 768) {
     $actual = "{0}x{1}" -f $logo.Width, $logo.Height
     $logo.Dispose()
-    throw "Wrong source logo dimensions ($actual). Replace assets\tcs-uploadfit-logo.jpg with the original 1408x768 owner-supplied image. Do not resize or crop the source."
+    throw "Wrong source logo dimensions ($actual). Expected 1408x768. Do not resize or crop the source."
 }
 
 function Write-ContainedPng {

@@ -51,6 +51,7 @@ test('Store assets are generated with contain sizing and transparent canvases', 
   assert.match(assets, /Transparent/);
   assert.match(assets, /\[Math\]::Min\(\$innerWidth \/ \$logo\.Width, \$innerHeight \/ \$logo\.Height\)/);
   assert.match(assets, /DrawImage\(\$logo, \$destination\)/);
+  assert.match(assets, /7324f9660e9f1ee27212982ec310e71f1475a8161846e396be2ada7eb5b764be/);
   assert.match(assets, /\$logo\.Width -ne 1408/);
   assert.match(assets, /\$logo\.Height -ne 768/);
   assert.doesNotMatch(assets, /ImageAttributes|WrapMode|TileFlip/i);
