@@ -107,6 +107,7 @@ jobs:
           name: TCS-UploadFit-MSIX
           path: |
             dist/msix/*.msix
+            dist/msix/*.msixbundle
             dist/msix/*.msixupload
           if-no-files-found: error
           retention-days: 14
