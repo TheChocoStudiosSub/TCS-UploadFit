@@ -1,98 +1,58 @@
 # TCS UploadFit
 
-<p><img src="assets/logo%20tcs%20upload%20fit.jpg" width="255" alt="Official TCS UploadFit logo"></p>
+![TCS UploadFit](assets/tcs-uploadfit-logo.jpg)
 
-**TCS UploadFit** is a local-first image preparation application by The Choco Studios. It is designed as a simple image-preparation tool: specify the target, prepare a batch, inspect the output, then export.
+TCS UploadFit prepares image files locally before they are uploaded to another service. The Windows Store edition includes its web application files inside the MSIX package and opens them through a local WebView2 host. Image content is not uploaded by the app.
 
-## Official brand asset
+## What the current free edition does
 
-The approved horizontal logo is stored at `assets/logo tcs upload fit.jpg` and is used by the application header. The app icon in `assets/icon.svg` uses the matching cloud-and-arrow symbol from the approved brand direction.
+- Resize images to a maximum width and height, or create an exact frame using fit, crop, or stretch.
+- Convert supported images to JPEG, PNG, or WebP.
+- Keep supported JPEG, PNG, or WebP source formats when requested.
+- Set JPEG and WebP quality and request a maximum file size. If the requested size cannot be reached at the selected dimensions, the result says so instead of pretending the limit was met.
+- Preview the source and prepared output, including dimensions and file size.
+- Prepare up to 5 images in one queue and export prepared images in a ZIP file.
+- Save local presets and use the English or Indonesian interface.
 
-## Product principles
+Current limits: 15 MiB per input image, 20 megapixels per image, 16,000 pixels per output edge, and 40 MiB of prepared output per batch. Supported input signatures include JPEG, PNG, WebP, BMP, and AVIF when the system decoder can read them. Animated GIF and SVG are not supported.
 
-- **Local processing:** selected image pixels are read, transformed and encoded on the device. The app does not upload images to TCS.
-- **No destructive edits:** source files are never overwritten.
-- **Explicit constraints:** fixed dimensions are not silently changed to satisfy a file-size target. When the output cannot meet the target, the app shows a warning.
-- **Honest validation:** the app checks format, pixel dimensions and file size; it does not certify image content or guarantee acceptance by a destination.
-- **Low operating cost:** no account, cloud processing, paid API, analytics SDK or advertising SDK is required.
+## Privacy
 
-## Public demo
+The Store edition has no account, analytics, advertising SDK, or payment feature. Its application files are packaged locally. Selected image files are read and processed on the device; the app does not send image contents to a server. Settings and saved presets are stored in the local WebView2 profile. The original file is not intentionally overwritten.
 
-The public demo is built from `src/edition.js`: **5 images**, **10 MB per input image**, and **50 MB of prepared output per batch**. The Store build uses **5 images**, **15 MB per input image**, and **40 MB of prepared output per batch**. `npm run build` creates both editions from one configuration; `npm run build:demo` creates the public demo output.
+The host is published self-contained for .NET, but Microsoft Edge WebView2 Evergreen Runtime is a separate Windows runtime dependency. The application files are local in the MSIX; the app does not fetch its HTML, scripts, styles, workers, or image files from a hosted URL. Image preparation works offline once the package and WebView2 Runtime are installed.
 
-[Open Demo TCS](https://tcs-uploadfit.vercel.app/)
+## Development
 
-## Features
+Requirements: Node.js 20 or later and Python 3 for the simple local static server.
 
-- Resize using width, height or an exact two-sided frame.
-- Fit, crop-to-fill or stretch modes.
-- JPEG, PNG and WebP output.
-- Quality tuning for lossy formats.
-- File-size targeting with explicit pass/fail feedback.
-- Sequential batch processing for up to 5 images in the public demo, with a 50 MB aggregate prepared-output cap.
-- Side-by-side image preview with actual dimensions and file sizes.
-- ZIP export for completed batches.
-- Saved image settings and English/Indonesian interface.
-- App-shell caching for offline use after the first successful load.
-
-## Supported inputs and limits
-
-JPEG, PNG, WebP, BMP and AVIF are accepted when the browser can decode them. Animated GIF and SVG are intentionally excluded. The demo accepts inputs up to 10 MB each and 50 MB of prepared output per batch. The Store edition accepts inputs up to 15 MB each and 40 MB of prepared output per batch. Both editions limit each decoded image to 20 megapixels and output edges to 16,000 pixels. The ZIP export uses the same edition-specific batch limit; its uncompressed output is assembled in memory, so the batch cap is deliberately conservative. Some formats depend on browser support.
-
-## Build editions
-
-Run `npm run build` with Node.js 20 or newer to generate `dist/demo` and `dist/store`. `npm run build:demo` generates the Vercel demo output. Edition limits, page titles, descriptions, and the service-worker cache version come from `src/edition.js`.
-
-## Run locally
-
-No build step or third-party runtime dependency is required. Use a local HTTP server because service workers need a secure context:
-
-```bash
-python -m http.server 8080
-```
-
-Then open `http://localhost:8080` in a current Chromium-based browser or another browser with `createImageBitmap`, Canvas `toBlob`, module scripts and service-worker support.
-
-## Tests
-
-Run the pure-logic test suite with Node.js 20 or newer:
-
-```bash
+```powershell
 npm test
+npm run build:demo
+npm run build:store
+npm run serve
 ```
 
-For browser image-pipeline checks, serve the project and open `/tests/smoke.html`. The browser suite covers decode, resize, format export and ZIP signatures.
+The web build outputs are written to `dist/demo` and `dist/store`. The demo and its existing Vercel configuration are retained; this repository task does not deploy to Vercel.
 
-## Public URL and Store edition access
+## Microsoft Store package
 
-The Store build is a separate static edition, not a protected license. Do not deploy `dist/store` to a public URL and expect the edition limits or missing demo badge to prevent access. Anyone who can reach a public static deployment can load its files. Keep the Store build for packaging and submission. A separate web release would need server-verified accounts or entitlements, and client-side checks alone are not a reliable access barrier.
+The logo source path is `assets/tcs-uploadfit-logo.jpg`. Keep the original 1408 × 768 owner-supplied image at that exact path. The Store asset generator checks those dimensions and stops rather than creating icons from a wrong-sized replacement. It then creates padded contain versions without modifying the source.
 
-## Microsoft Store path
+The Store release is built as an x64 MSIX, not as an EXE installer:
 
-The current project is a PWA source. Before Store submission:
+1. Install the .NET 10 SDK, Windows 10 SDK (for MakeAppx.exe), and Microsoft Edge WebView2 Runtime.
+2. The repository already includes `packaging/partner-center.identity.json` with the Product identity values supplied by the owner.
+3. Keep the Identity Name, Publisher, and Publisher Display Name unchanged unless Partner Center changes the reserved product identity.
+4. Run PowerShell from the repository root:
 
-1. Publish the app on a stable HTTPS origin.
-2. Validate the manifest, icons, service worker, privacy policy and offline behaviour on that origin.
-3. Run the origin through PWABuilder and resolve its report-card findings.
-4. Generate the Windows package with the exact Package Identity and Publisher ID from Partner Center.
-5. Test the package on a clean Windows 10/11 installation and run Windows App Certification Kit.
-6. Configure paid availability, regional pricing, age rating, listing assets and support information in Partner Center.
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\build-msix.ps1
+```
 
-The repository does not contain a Store package, signing identity or configured price yet.
+The output is written to `dist/msix/`. The script creates an unsigned `.msix` and a `.msixupload` ZIP containing that package. No `.appxsym` file is included, so Partner Center crash-symbol analysis is not available for this build. Do not add a private signing certificate for a Microsoft Store submission. The full build and Partner Center steps are in [docs/MSIX-BUILD.md](docs/MSIX-BUILD.md).
 
-## Project map
+## Planned Pro edition
 
-- `index.html`: semantic workspace and application controls.
-- `src/styles.css`: responsive application styles.
-- `src/app.js`: queue, presets, preview, downloads and language handling.
-- `src/processor.js`: local decode, resize, encode and size targeting.
-- `src/zip.js`: dependency-free ZIP writer.
-- `src/i18n.js`: English and Indonesian strings.
-- `sw.js`: offline app-shell caching.
-- `manifest.webmanifest`: install metadata.
-- `privacy.html`, `terms.html`: public policy pages.
-- `tests/`: Node and browser checks.
-
-## Ownership
-
-© 2026 The Choco Studios. All rights reserved. Third-party rights remain with their respective owners.
+The current release remains free. Payment, accounts, licences, and Pro locks are not included. See [docs/PRO-ROADMAP.md](docs/PRO-ROADMAP.md) for possible later features and price positioning.

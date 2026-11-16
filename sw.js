@@ -19,7 +19,7 @@ const REQUIRED_SHELL_FILES = [
 
 const OPTIONAL_SHELL_FILES = [
   '/assets/icon.svg',
-  '/assets/logo tcs upload fit.jpg',
+  '/assets/tcs-uploadfit-logo.jpg',
   '/privacy.html',
   '/terms.html'
 ];

@@ -2,7 +2,7 @@ name: Quality checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, store-release-prep]
   pull_request:
     branches: [main]
 
@@ -63,3 +63,50 @@ jobs:
           UPLOADFIT_BASE_URL: http://127.0.0.1:4173
           UPLOADFIT_SMOKE_URL: http://127.0.0.1:4174/tests/smoke.html
         run: node tests/browser.e2e.mjs
+
+
+  windows-host:
+    runs-on: windows-2025
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the Store web edition
+        run: npm run build:store
+      - name: Compile the Windows WebView2 host
+        run: dotnet build packaging/WindowsApp/TCS.UploadFit.Host.csproj -c Release
+
+
+  msix-package:
+    runs-on: windows-2025
+    needs: [test, browser]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 20
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build unsigned Store MSIX and upload container
+        shell: pwsh
+        run: .\scripts\build-msix.ps1 -KeepWork
+      - name: Publish Store package artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: TCS-UploadFit-MSIX
+          path: |
+            dist/msix/*.msix
+            dist/msix/*.msixupload
+          if-no-files-found: error
+          retention-days: 14

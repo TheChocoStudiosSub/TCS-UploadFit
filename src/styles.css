@@ -189,3 +189,7 @@ a{color:inherit}
 .brand{gap:12px;min-width:0}
 .brand-logo{display:block;width:174px;height:auto;max-height:66px;object-fit:contain;object-position:left center;border-radius:3px}
 @media(max-width:470px){.brand-logo{width:145px;max-height:56px}}
+
+.dropzone:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+
+.file-text{min-width:0}

@@ -40,9 +40,9 @@ async function buildEdition(id) {
   await rm(destination, { recursive: true, force: true });
   await mkdir(destination, { recursive: true });
   // Copy individual files so the default dist output can safely live inside the source root.
-  const excludedTopLevel = new Set(['scripts', 'tests']);
+  const excludedTopLevel = new Set(['scripts', 'tests', 'packaging', 'docs']);
   const excludedFiles = new Set([
-    'package.json', 'package-lock.json', 'README.md', 'STORE-LISTING.md', 'LICENSE'
+    'package.json', 'package-lock.json', 'README.md', 'STORE-LISTING.md', 'LICENSE', 'vercel.json', '.gitignore'
   ]);
   for (const sourceFile of await listSourceFiles(root)) {
     const relative = path.relative(root, sourceFile);
@@ -81,6 +81,9 @@ async function buildEdition(id) {
 
   await writeFile(path.join(destination, 'edition-build.json'), JSON.stringify({
     edition: id,
+    tier: edition.tier,
+    enableServiceWorker: edition.enableServiceWorker,
+    features: edition.features,
     version,
     sourceHash,
     maxImages: edition.maxImages,

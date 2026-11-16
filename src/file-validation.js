@@ -11,7 +11,12 @@ export function fileDedupKey(file) {
   ].join('|');
 }
 
-export function validateIncomingFiles(incoming, existingFiles, maxImages, maxInputBytes) {
+export function validateIncomingFiles(incoming, existingFiles = [], maxImages, maxInputBytes) {
+  if (!Array.isArray(incoming) || !Array.isArray(existingFiles)
+    || !Number.isInteger(maxImages) || maxImages < 1
+    || !Number.isFinite(maxInputBytes) || maxInputBytes < 1) {
+    return { accepted: [], skipped: { tooLarge: 0, overCount: 0, unsupported: 0, empty: 0, duplicate: 0 } };
+  }
   const accepted = [];
   const skipped = { tooLarge: 0, overCount: 0, unsupported: 0, empty: 0, duplicate: 0 };
   const existing = new Set(existingFiles.map(fileDedupKey));

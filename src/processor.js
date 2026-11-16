@@ -4,7 +4,6 @@ import { translate } from './i18n.js';
 const message = (key, language, vars) => translate(key, language, vars);
 
 const SUPPORTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/avif']);
-const SUPPORTED_EXTENSIONS = /\.(jpe?g|png|webp|bmp|avif)$/i;
 export const MAX_FILE_BYTES = EDITION.maxInputBytes;
 export const MAX_IMAGE_PIXELS = EDITION.maxImagePixels;
 export const MAX_OUTPUT_EDGE = EDITION.maxOutputEdge;
@@ -44,7 +43,27 @@ function positiveInteger(value, label, language) {
 }
 
 export function normalizeSettings(raw = {}, language = 'en') {
-  if (raw?._normalized === true) return raw;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error(message('invalidSettings', language));
+  }
+  if (raw?._normalized === true) {
+    const width = positiveInteger(raw.width, 'Width', language);
+    const height = positiveInteger(raw.height, 'Height', language);
+    const maxBytes = raw.maxBytes === null || raw.maxBytes === undefined ? null : Number(raw.maxBytes);
+    if (maxBytes !== null && (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > EDITION.maxBatchOutputBytes)) {
+      throw new Error(message('sizePositive', language));
+    }
+    if (!['original', 'image/jpeg', 'image/png', 'image/webp'].includes(raw.format)) throw new Error(message('formatChoice', language));
+    if (!['max', 'frame'].includes(raw.targetMode) || !['fit', 'fill', 'stretch'].includes(raw.mode)) throw new Error(message('modeChoice', language));
+    const quality = Number(raw.quality);
+    if (!Number.isFinite(quality) || quality < MIN_LOSSY_QUALITY || quality > 1) throw new Error(message('invalidSettings', language));
+    return {
+      width, height, maxBytes, format: raw.format, quality,
+      targetMode: raw.targetMode, mode: raw.mode,
+      background: /^#[\\da-f]{6}$/i.test(raw.background || '') ? raw.background : '#f4f0e7',
+      _normalized: true
+    };
+  }
   const width = positiveInteger(raw.width, 'Width', language);
   const height = positiveInteger(raw.height, 'Height', language);
   const rawMaxSize = raw.maxSize === '' || raw.maxSize === null || raw.maxSize === undefined
@@ -54,7 +73,8 @@ export function normalizeSettings(raw = {}, language = 'en') {
     throw new Error(message('sizePositive', language));
   }
   const maxSizeValue = rawMaxSize === null ? null : Number(rawMaxSize);
-  const isMegabytes = raw.sizeUnit === 'MB';
+  if (raw.sizeUnit !== undefined && !['KB', 'MB'].includes(raw.sizeUnit)) throw new Error(message('sizeUnitChoice', language));
+  const isMegabytes = (raw.sizeUnit || 'MB') === 'MB';
   const unitMaximum = isMegabytes
     ? EDITION.maxBatchOutputBytes / (1024 * 1024)
     : EDITION.maxBatchOutputBytes / 1024;
@@ -137,64 +157,141 @@ export function calculateTarget(sourceWidth, sourceHeight, settings) {
 }
 
 export async function readImageHeader(file) {
-  const buffer = await file.arrayBuffer();
+  if (!(file instanceof Blob) || file.size < 12) return null;
+  const sourceSize = file.size;
+  const buffer = await file.slice(0, Math.min(sourceSize, 8 * 1024 * 1024)).arrayBuffer();
   const bytes = new Uint8Array(buffer);
   const view = new DataView(buffer);
+  const ascii = (start, length) => String.fromCharCode(...bytes.subarray(start, start + length));
 
-  // PNG: IHDR width and height are fixed at byte offsets 16 and 20.
-  if (bytes.length >= 24
-    && view.getUint32(0) === 0x89504e47
-    && view.getUint32(4) === 0x0d0a1a0a) {
-    return { mime: 'image/png', width: view.getUint32(16), height: view.getUint32(20) };
+  // PNG signature and IHDR are both required. Extension and MIME labels are not trusted.
+  if (bytes.length >= 33
+    && bytes[0] === 0x89 && ascii(1, 3) === 'PNG'
+    && ascii(4, 4) === '\\r\\n\\x1a\\n'
+    && view.getUint32(8, false) === 13
+    && ascii(12, 4) === 'IHDR') {
+    const width = view.getUint32(16, false);
+    const height = view.getUint32(20, false);
+    return width > 0 && height > 0 ? { mime: 'image/png', width, height } : null;
   }
 
-  // JPEG: walk marker segments until a Start Of Frame marker is found.
+  // JPEG marker segments: require a valid Start Of Frame marker with non-zero dimensions.
   if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
     const sof = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
     let offset = 2;
     while (offset + 4 < bytes.length) {
       if (bytes[offset] !== 0xff) { offset += 1; continue; }
-      while (bytes[offset] === 0xff) offset += 1;
+      while (offset < bytes.length && bytes[offset] === 0xff) offset += 1;
+      if (offset >= bytes.length) break;
       const marker = bytes[offset];
       if (marker === 0xd9 || marker === 0xda) break;
+      if (offset + 2 >= bytes.length) break;
       const segmentLength = view.getUint16(offset + 1, false);
       if (segmentLength < 2 || offset + 1 + segmentLength > bytes.length) break;
-      if (sof.has(marker) && offset + 8 < bytes.length) {
-        return {
-          mime: 'image/jpeg',
-          height: view.getUint16(offset + 4, false),
-          width: view.getUint16(offset + 6, false)
-        };
+      if (sof.has(marker) && offset + 7 < bytes.length) {
+        const height = view.getUint16(offset + 4, false);
+        const width = view.getUint16(offset + 6, false);
+        return width > 0 && height > 0 ? { mime: 'image/jpeg', width, height } : null;
       }
       offset += 1 + segmentLength;
     }
   }
 
-  // WebP: VP8X, VP8L and VP8 encode dimensions in different headers.
-  if (bytes.length >= 30
-    && String.fromCharCode(...bytes.subarray(0, 4)) === 'RIFF'
-    && String.fromCharCode(...bytes.subarray(8, 12)) === 'WEBP') {
-    const chunk = String.fromCharCode(...bytes.subarray(12, 16));
-    if (chunk === 'VP8X') {
+  // WebP is a RIFF container. Check its declared length and the image chunk header.
+  if (bytes.length >= 30 && ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') {
+    const riffLength = view.getUint32(4, true) + 8;
+    const chunk = ascii(12, 4);
+    if (riffLength > sourceSize || riffLength < 20) return null;
+    if (chunk === 'VP8X' && view.getUint32(16, true) >= 10) {
       const width = 1 + bytes[24] + (bytes[25] << 8) + (bytes[26] << 16);
       const height = 1 + bytes[27] + (bytes[28] << 8) + (bytes[29] << 16);
       return { mime: 'image/webp', width, height };
     }
-    if (chunk === 'VP8L' && bytes.length >= 25 && bytes[20] === 0x2f) {
+    if (chunk === 'VP8L' && bytes.length >= 25 && view.getUint32(16, true) >= 5 && bytes[20] === 0x2f) {
       const width = 1 + bytes[21] + ((bytes[22] & 0x3f) << 8);
       const height = 1 + ((bytes[22] >> 6) & 0x03) + (bytes[23] << 2) + ((bytes[24] & 0x0f) << 10);
       return { mime: 'image/webp', width, height };
     }
-    if (chunk === 'VP8 ' && bytes.length >= 30
+    if (chunk === 'VP8 ' && bytes.length >= 30 && view.getUint32(16, true) >= 10
       && bytes[23] === 0x9d && bytes[24] === 0x01 && bytes[25] === 0x2a) {
       const width = view.getUint16(26, true) & 0x3fff;
       const height = view.getUint16(28, true) & 0x3fff;
-      return { mime: 'image/webp', width, height };
+      return width > 0 && height > 0 ? { mime: 'image/webp', width, height } : null;
     }
   }
+
+  // BMP files require the BM signature and a readable BITMAPINFOHEADER or later DIB header.
+  if (bytes.length >= 54 && ascii(0, 2) === 'BM') {
+    const declaredSize = view.getUint32(2, true);
+    const dibSize = view.getUint32(14, true);
+    if (declaredSize > sourceSize || dibSize < 40 || 14 + dibSize > bytes.length) return null;
+    const width = Math.abs(view.getInt32(18, true));
+    const height = Math.abs(view.getInt32(22, true));
+    return width > 0 && height > 0 ? { mime: 'image/bmp', width, height } : null;
+  }
+
+  // AVIF/AVIS dimensions are read from the ISO-BMFF ispe property before decoding.
+  if (bytes.length >= 16 && ascii(4, 4) === 'ftyp') {
+    const boxLength = view.getUint32(0, false);
+    if (boxLength < 16 || boxLength > sourceSize || boxLength > bytes.length) return null;
+    const brands = [ascii(8, 4)];
+    for (let offset = 16; offset + 4 <= boxLength; offset += 4) brands.push(ascii(offset, 4));
+    if (brands.some(brand => brand === 'avif' || brand === 'avis')) {
+      const readBox = (offset, limit) => {
+        if (offset + 8 > limit) return null;
+        let size = view.getUint32(offset, false);
+        const type = ascii(offset + 4, 4);
+        let headerSize = 8;
+        if (size === 1) {
+          if (offset + 16 > limit) return null;
+          const large = view.getBigUint64(offset + 8, false);
+          if (large > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+          size = Number(large);
+          headerSize = 16;
+        } else if (size === 0) {
+          size = limit - offset;
+        }
+        if (size < headerSize || size > limit - offset) return null;
+        return { offset, size, type, headerSize, end: offset + size };
+      };
+      const findSpatialExtents = (start, end, depth = 0) => {
+        if (depth > 8) return null;
+        let offset = start;
+        while (offset + 8 <= end) {
+          const box = readBox(offset, end);
+          if (!box) return null;
+          if (box.type === 'ispe' && box.size >= box.headerSize + 12) {
+            const fullBox = box.offset + box.headerSize;
+            const width = view.getUint32(fullBox + 4, false);
+            const height = view.getUint32(fullBox + 8, false);
+            if (width > 0 && height > 0) return { width, height };
+          }
+          let childStart = box.offset + box.headerSize;
+          if (box.type === 'meta') childStart += 4;
+          if (['meta', 'iprp', 'ipco'].includes(box.type)) {
+            const found = findSpatialExtents(childStart, box.end, depth + 1);
+            if (found) return found;
+          }
+          offset = box.end;
+        }
+        return null;
+      };
+      let offset = boxLength;
+      while (offset + 8 <= bytes.length) {
+        const box = readBox(offset, bytes.length);
+        if (!box) break;
+        if (box.type === 'meta') {
+          const dimensions = findSpatialExtents(box.offset + box.headerSize + 4, box.end, 1);
+          if (dimensions) return { mime: 'image/avif', ...dimensions };
+        }
+        offset = box.end;
+      }
+      return null;
+    }
+  }
+
   return null;
 }
-
 function throwIfAborted(signal, language = 'en') {
   if (!signal?.aborted) return;
   const error = new Error(message('processingCancelled', language));
@@ -297,11 +394,6 @@ export async function encodeWithinLimit(canvas, mime, requestedQuality, maxBytes
   return { blob: lowestSizeBlob, quality: MIN_LOSSY_QUALITY, metLimit: lowestSizeBlob.size <= maxBytes };
 }
 
-function mimeFromExtension(name) {
-  const extension = String(name || '').match(/\.([^.]+)$/)?.[1]?.toLowerCase();
-  return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', bmp: 'image/bmp', avif: 'image/avif' })[extension] || '';
-}
-
 export async function processImage(file, rawSettings, { signal, language = 'en' } = {}) {
   const settings = rawSettings?._normalized === true ? rawSettings : normalizeSettings(rawSettings, language);
   if (!(file instanceof Blob)) throw new Error(message('fileUnreadable', language));
@@ -309,16 +401,15 @@ export async function processImage(file, rawSettings, { signal, language = 'en' 
   if (file.size > MAX_FILE_BYTES) {
     throw new Error(message('fileTooLarge', language, { maxSize: formatEditionBytes(MAX_FILE_BYTES, language) }));
   }
-  const extensionMime = mimeFromExtension(file.name);
-  if (!SUPPORTED_MIME_TYPES.has(file.type) && !SUPPORTED_MIME_TYPES.has(extensionMime) && !SUPPORTED_EXTENSIONS.test(file.name || '')) {
-    throw new Error(message('unsupportedFormat', language));
-  }
   if (typeof createImageBitmap !== 'function') throw new Error(message('decodeUnsupported', language));
 
   throwIfAborted(signal, language);
   const header = await readImageHeader(file);
   throwIfAborted(signal, language);
-  if (header?.width && header?.height && header.width * header.height > MAX_IMAGE_PIXELS) {
+  if (!header || !SUPPORTED_MIME_TYPES.has(header.mime)) {
+    throw new Error(message('unsupportedFormat', language));
+  }
+  if (header.width && header.height && header.width * header.height > MAX_IMAGE_PIXELS) {
     throw new Error(message('megapixelLimit', language, { maxPixels: MAX_IMAGE_PIXELS / 1_000_000 }));
   }
 
@@ -337,13 +428,13 @@ export async function processImage(file, rawSettings, { signal, language = 'en' 
     }
 
     const mime = settings.format === 'original'
-      ? (['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ? file.type
-        : ['image/jpeg', 'image/png', 'image/webp'].includes(header?.mime) ? header.mime
-          : ['image/jpeg', 'image/png', 'image/webp'].includes(extensionMime) ? extensionMime
-            : 'image/png')
+      ? (['image/jpeg', 'image/png', 'image/webp'].includes(header.mime) ? header.mime : 'image/png')
       : settings.format;
 
     let target = calculateTarget(bitmap.width, bitmap.height, settings);
+    if (target.width > MAX_OUTPUT_EDGE || target.height > MAX_OUTPUT_EDGE) {
+      throw new Error(message('outputEdgeLimit', language, { maxEdge: MAX_OUTPUT_EDGE.toLocaleString(language === 'id' ? 'id-ID' : 'en-US') }));
+    }
     if (target.width * target.height > MAX_IMAGE_PIXELS) {
       throw new Error(message('outputPixelLimit', language, { maxPixels: MAX_IMAGE_PIXELS / 1_000_000 }));
     }

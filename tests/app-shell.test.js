@@ -33,6 +33,13 @@ test('app shell references a present set of local assets', async () => {
   const paths = [...html.matchAll(/(?:src|href)="(\/(?:assets|src)\/[^\"]+)"/g)].map(match => match[1]);
   for (const webPath of new Set(paths)) await access(path.join(root, webPath.slice(1)));
   assert.match(css, /\.image-wait/);
+  assert.ok(html.includes('/assets/tcs-uploadfit-logo.jpg'));
+  assert.ok(html.includes('Content-Security-Policy'));
+  assert.ok(html.includes('aria-keyshortcuts="Enter Space"'));
+  assert.ok(app.includes("EDITION.enableServiceWorker && 'serviceWorker' in navigator"));
+  assert.ok(app.includes("$('#source-preview').removeAttribute('src')"));
+  assert.ok(app.includes("item.outputUrl = null;"));
+  assert.ok(css.includes('.file-text{min-width:0}'));
 });
 
 

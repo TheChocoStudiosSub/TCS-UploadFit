@@ -10,15 +10,30 @@ const sourceFiles = [
   'README.md',
   'STORE-LISTING.md',
   'index.html',
+  'offline.html',
+  'privacy.html',
+  'terms.html',
   'src/app.js',
   'src/edition.js',
+  'src/file-validation.js',
+  'src/i18n.js',
   'src/processor.js',
+  'src/processor.worker.js',
+  'src/styles.css',
+  'src/zip.js',
+  'sw.js',
+  'docs/MSIX-BUILD.md',
+  'docs/PRO-ROADMAP.md',
+  'packaging/WindowsApp/MainForm.cs',
+  'packaging/WindowsApp/Package.appxmanifest.template',
+  'scripts/build-msix.ps1',
+  'scripts/generate-store-assets.ps1',
   'tests/smoke.html'
 ];
 
 test('published source and copy avoid em dash punctuation', () => {
-  const forbidden = String.fromCharCode(0x2014);
-  const found = sourceFiles.filter(file => readFileSync(resolve(root, file), 'utf8').includes(forbidden));
+  const forbidden = [String.fromCharCode(0x2014), String.fromCharCode(0x2013)];
+  const found = sourceFiles.filter(file => forbidden.some(mark => readFileSync(resolve(root, file), 'utf8').includes(mark)));
   assert.deepEqual(found, []);
 });
 

@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171916">
   <meta name="description" content="__EDITION_DESCRIPTION__">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'none'; worker-src 'self' blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';">
   <meta name="application-name" content="TCS UploadFit">
   <meta name="color-scheme" content="light">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icon.svg">
   <link rel="stylesheet" href="/src/styles.css">
   <title>__EDITION_TITLE__</title>
 </head>
@@ -16,7 +18,7 @@
   <div class="app-frame">
     <header class="masthead">
       <a class="brand" href="#top" aria-label="TCS UploadFit home">
-        <img class="brand-logo" src="/assets/logo%20tcs%20upload%20fit.jpg" alt="TCS UploadFit">
+        <img class="brand-logo" src="/assets/tcs-uploadfit-logo.jpg" alt="TCS UploadFit">
       </a>
       <div class="masthead-meta">
         <span class="meta-code" data-edition-badge>DEMO TCS</span>
@@ -102,7 +104,7 @@
           <div class="intake-panel">
             <div class="intake-label"><span data-i18n="intakeTitle">Add images</span><span class="intake-accepted">JPG / PNG / WEBP / BMP / AVIF</span></div>
             <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/avif,.jpg,.jpeg,.png,.webp,.bmp,.avif" multiple hidden>
-            <div id="dropzone" class="dropzone" role="group" aria-label="Add images">
+            <div id="dropzone" class="dropzone" role="group" tabindex="0" aria-keyshortcuts="Enter Space" aria-label="Add images">
               <div class="drop-copy"><strong data-i18n="dropHeadline">Put the files on the table.</strong><span data-i18n="dropSubhead">Drop images here, or browse from your device.</span></div>
               <button id="browse-files" class="browse-button" type="button" data-i18n="browseFiles">BROWSE FILES</button>
               <div class="drop-foot"><span data-i18n="fileRules">Up to 5 images · 10 MB each · 50 MB total output</span></div>

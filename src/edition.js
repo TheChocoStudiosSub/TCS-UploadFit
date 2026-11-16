@@ -1,6 +1,9 @@
 export const EDITIONS = Object.freeze({
   demo: Object.freeze({
     id: 'demo',
+    tier: 'free',
+    enableServiceWorker: true,
+    features: Object.freeze({ resize: true, crop: true, compress: true, convert: true, batchProcessing: true, zipExport: true, savedPresets: true, bilingualInterface: true }),
     maxImages: 5,
     maxInputBytes: 10 * 1024 * 1024,
     maxBatchOutputBytes: 50 * 1024 * 1024,
@@ -16,6 +19,9 @@ export const EDITIONS = Object.freeze({
   }),
   store: Object.freeze({
     id: 'store',
+    tier: 'free',
+    enableServiceWorker: false,
+    features: Object.freeze({ resize: true, crop: true, compress: true, convert: true, batchProcessing: true, zipExport: true, savedPresets: true, bilingualInterface: true }),
     maxImages: 5,
     maxInputBytes: 15 * 1024 * 1024,
     maxBatchOutputBytes: 40 * 1024 * 1024,
@@ -34,6 +40,11 @@ export const EDITIONS = Object.freeze({
 // Local development defaults to demo. The build script selects the edition in dist.
 export const ACTIVE_EDITION = 'demo';
 export const EDITION = EDITIONS[ACTIVE_EDITION];
+
+// Feature flags are edition metadata only. Payment and entitlement logic are intentionally absent.
+export function hasFeature(name, edition = EDITION) {
+  return typeof name === 'string' && edition.features?.[name] === true;
+}
 
 export function formatEditionBytes(bytes, language = 'en') {
   const mb = 1024 * 1024;

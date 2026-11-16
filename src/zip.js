@@ -19,7 +19,7 @@ export function crc32(bytes) {
 
 function put16(view, offset, value) { view.setUint16(offset, value, true); }
 function put32(view, offset, value) { view.setUint32(offset, value >>> 0, true); }
-const RESERVED_WINDOWS_NAME = /^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$/i;
+const RESERVED_WINDOWS_NAME = /^(?:CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?$/i;
 const INVALID_FILENAME_CHARACTERS = /[\\/:*?"<>|\u0000-\u001f\u007f]/g;
 
 function sanitizeFilename(input) {
@@ -76,7 +76,15 @@ export async function createZip(entries, { language = 'en' } = {}) {
     throw zipError('zipTooMany', language, { maxFiles: EDITION.maxImages });
   }
 
-  const totalBytes = entries.reduce((sum, entry) => sum + (entry.blob?.size || 0), 0);
+  let totalBytes = 0;
+  for (const entry of entries) {
+    if (!entry || !(entry.blob instanceof Blob)) throw zipError('zipMissingData', language);
+    if (!Number.isSafeInteger(entry.blob.size) || entry.blob.size < 0) throw zipError('zipMissingData', language);
+    totalBytes += entry.blob.size;
+    if (!Number.isSafeInteger(totalBytes) || totalBytes > EDITION.maxBatchOutputBytes) {
+      throw zipError('zipTooLarge', language, { maxSize: formatEditionBytes(EDITION.maxBatchOutputBytes, language) });
+    }
+  }
   if (totalBytes > EDITION.maxBatchOutputBytes) {
     throw zipError('zipTooLarge', language, { maxSize: formatEditionBytes(EDITION.maxBatchOutputBytes, language) });
   }
@@ -92,6 +100,7 @@ export async function createZip(entries, { language = 'en' } = {}) {
     const name = uniqueFilename(entry.name, usedNames);
     const nameBytes = encoder.encode(name);
     const data = new Uint8Array(await entry.blob.arrayBuffer());
+    if (data.byteLength !== entry.blob.size) throw zipError('zipMissingData', language);
     const checksum = crc32(data);
     const { dosTime, dosDate } = toDosDateTime(entry.lastModified);
     if (offset + 30 + nameBytes.length + data.byteLength > 0xffffffff) {
@@ -134,6 +143,9 @@ export async function createZip(entries, { language = 'en' } = {}) {
   }
 
   const directorySize = directoryParts.reduce((total, part) => total + part.byteLength, 0);
+  if (offset + directorySize + 22 > 0xffffffff || directorySize > 0xffffffff) {
+    throw zipError('zipTooLargeForFormat', language);
+  }
   const end = new Uint8Array(22);
   const endView = new DataView(end.buffer);
   put32(endView, 0, 0x06054b50);

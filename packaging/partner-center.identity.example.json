@@ -1,0 +1,7 @@
+{
+  "IdentityName": "<IDENTITY_NAME_FROM_PARTNER_CENTER>",
+  "Publisher": "<PUBLISHER_FROM_PARTNER_CENTER>",
+  "PublisherDisplayName": "<PUBLISHER_DISPLAY_NAME_FROM_PARTNER_CENTER>",
+  "Version": "1.0.0.0",
+  "PackageName": "TCS-UploadFit"
+}
