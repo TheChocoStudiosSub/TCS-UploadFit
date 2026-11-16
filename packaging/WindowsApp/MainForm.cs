@@ -3,6 +3,7 @@ using Microsoft.Web.WebView2.WinForms;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace TCS.UploadFit.Host;
@@ -19,6 +20,7 @@ public sealed class MainForm : Form
     public MainForm()
     {
         Text = "TCS UploadFit";
+        Icon = LoadApplicationIcon();
         Width = 1360;
         Height = 900;
         MinimumSize = new Size(960, 640);
@@ -27,6 +29,38 @@ public sealed class MainForm : Form
         Controls.Add(browser);
         Load += BrowserFormLoad;
     }
+
+    private static Icon LoadApplicationIcon()
+    {
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "assets", "pwa-512.png");
+        if (!File.Exists(iconPath))
+            throw new FileNotFoundException("The TCS UploadFit application icon is missing.", iconPath);
+
+        using var source = new Bitmap(iconPath);
+        using var iconBitmap = new Bitmap(256, 256);
+        using (var graphics = Graphics.FromImage(iconBitmap))
+        {
+            graphics.Clear(Color.Transparent);
+            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            graphics.DrawImage(source, new Rectangle(0, 0, 256, 256));
+        }
+
+        var nativeIcon = iconBitmap.GetHicon();
+        try
+        {
+            using var icon = Icon.FromHandle(nativeIcon);
+            return (Icon)icon.Clone();
+        }
+        finally
+        {
+            DestroyIcon(nativeIcon);
+        }
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool DestroyIcon(IntPtr handle);
 
     private async void BrowserFormLoad(object? sender, EventArgs e)
     {
