@@ -167,7 +167,7 @@ export async function readImageHeader(file) {
   // PNG signature and IHDR are both required. Extension and MIME labels are not trusted.
   if (bytes.length >= 33
     && bytes[0] === 0x89 && ascii(1, 3) === 'PNG'
-    && ascii(4, 4) === '\\r\\n\\x1a\\n'
+    && ascii(4, 4) === '\r\n\x1a\n'
     && view.getUint32(8, false) === 13
     && ascii(12, 4) === 'IHDR') {
     const width = view.getUint32(16, false);

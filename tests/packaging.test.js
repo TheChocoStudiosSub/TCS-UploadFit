@@ -33,7 +33,7 @@ test('Store build script rejects missing identity and does not sign the package'
   assert.match(script, /IdentityName/);
   assert.match(script, /PublisherDisplayName/);
   assert.match(script, /MakeAppx\.exe/);
-  assert.match(script, /MakeAppx\.FullName pack/);
+  assert.match(script, /makeAppx\.FullName pack/);
   assert.match(script, /Compress-Archive/);
   assert.match(script, /Do not self-sign|unsigned MSIX|unsigned/i);
   assert.ok(!/signtool\s+sign/i.test(script));
@@ -48,8 +48,8 @@ test('Store identity example contains placeholders rather than fabricated publis
 
 test('Store assets are generated with contain sizing and transparent canvases', async () => {
   const assets = await read('scripts/generate-store-assets.ps1');
-  assert.match(assets, /Color\.Transparent/);
-  assert.match(assets, /Math\.Min\(\$innerWidth \/ \$logo\.Width, \$innerHeight \/ \$logo\.Height\)/);
+  assert.match(assets, /Transparent/);
+  assert.match(assets, /\[Math\]::Min\(\$innerWidth \/ \$logo\.Width, \$innerHeight \/ \$logo\.Height\)/);
   assert.match(assets, /DrawImage\(\$logo, \$destination\)/);
   assert.match(assets, /\$logo\.Width -ne 1408/);
   assert.match(assets, /\$logo\.Height -ne 768/);

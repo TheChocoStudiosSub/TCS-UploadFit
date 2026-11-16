@@ -75,21 +75,26 @@ test('central directory offsets and CRC values point to matching local entries',
   assert.ok(entries[1].localOffset > entries[0].localOffset);
 });
 
-test('ZIP names avoid case-insensitive collisions and Windows-reserved names', async () => {
+test('ZIP names avoid case-insensitive collisions and common Windows-reserved names', async () => {
   const archive = await createZip([
     { name: 'Foto.jpg', blob: new Blob(['a']) },
     { name: 'foto.jpg', blob: new Blob(['b']) },
     { name: 'CON.txt', blob: new Blob(['c']) },
     { name: 'NUL.jpg', blob: new Blob(['d']) },
-    { name: 'CONIN$.txt', blob: new Blob(['e']) },
+    { name: 'CONIN$.txt', blob: new Blob(['e']) }
+  ]);
+  const entries = readCentralDirectory(new Uint8Array(await archive.arrayBuffer()));
+  assert.deepEqual(entries.map(entry => entry.name), [
+    'Foto.jpg', 'foto (2).jpg', '_CON.txt', '_NUL.jpg', '_CONIN$.txt'
+  ]);
+  assert.equal(new Set(entries.map(entry => entry.name.toLocaleLowerCase('en-US'))).size, entries.length);
+
+  const uncommonReserved = await createZip([
     { name: 'CONOUT$.txt', blob: new Blob(['f']) },
     { name: 'COM¹.txt', blob: new Blob(['g']) },
     { name: 'LPT².txt', blob: new Blob(['h']) },
     { name: 'trailing. ', blob: new Blob(['i']) }
   ]);
-  const entries = readCentralDirectory(new Uint8Array(await archive.arrayBuffer()));
-  assert.deepEqual(entries.map(entry => entry.name), [
-    'Foto.jpg', 'foto (2).jpg', '_CON.txt', '_NUL.jpg', '_CONIN$.txt', '_CONOUT$.txt', '_COM¹.txt', '_LPT².txt', 'trailing'
-  ]);
-  assert.equal(new Set(entries.map(entry => entry.name.toLocaleLowerCase('en-US'))).size, entries.length);
+  const extraNames = readCentralDirectory(new Uint8Array(await uncommonReserved.arrayBuffer())).map(entry => entry.name);
+  assert.deepEqual(extraNames, ['_CONOUT$.txt', '_COM¹.txt', '_LPT².txt', 'trailing']);
 });

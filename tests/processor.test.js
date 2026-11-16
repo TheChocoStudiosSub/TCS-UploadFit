@@ -289,7 +289,7 @@ test('drawImage coordinates and dimensions are integers', async () => {
   }; } };
   globalThis.createImageBitmap = async () => ({ width: 1000, height: 333, close() {} });
   try {
-    const file = Object.assign(new Blob(['source'], { type: 'image/jpeg' }), { name: 'photo.jpg' });
+    const file = Object.assign(new Blob([validJpeg()], { type: 'image/jpeg' }), { name: 'photo.jpg' });
     await processImage(file, { ...base, width: '1000', height: '1000', noUpscale: false });
     assert.ok(drawn.every(Number.isInteger));
   } finally {
