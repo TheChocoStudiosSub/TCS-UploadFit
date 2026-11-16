@@ -4,7 +4,7 @@ The Store edition is a Windows desktop package. All HTML, CSS, JavaScript, worke
 
 ## Build prerequisites
 
-- Windows 10 version 2004 (build 19041) or later, x64.
+- Windows 10 version 2004 (build 19041) or later. The build produces x86 and x64 packages.
 - .NET 10 SDK for Windows.
 - Windows 10 SDK with `MakeAppx.exe` (x64).
 - Node.js 20 or later.
@@ -43,8 +43,12 @@ npm run build:msix
 
 Expected output:
 
-- `dist/msix/TheChocoStudios.TCSUploadFit_1.0.0.0_x64.msix`
-- `dist/msix/TheChocoStudios.TCSUploadFit_1.0.0.0_x64.msixupload`
+- `dist/msix/TCS-UploadFit_1.0.0.0_x86.msix`
+- `dist/msix/TCS-UploadFit_1.0.0.0_x64.msix`
+- `dist/msix/TCS-UploadFit_1.0.0.0.msixbundle` (contains both architectures)
+- `dist/msix/TCS-UploadFit_1.0.0.0.msixupload` (upload this bundle to Partner Center)
+
+The build publishes separate self-contained x86 and x64 WebView2 host executables, packages each architecture with the same local web payload, validates both packages, then creates and verifies one MSIX bundle. It does not produce ARM64. On 64-bit Windows, the Store can select the x64 package; 32-bit Windows receives x86. WebView2 Evergreen Runtime must be installed with the matching architecture.
 
 The actual package filename uses the Version and PackageName in the identity JSON. The build script creates Store icon PNGs from `assets/tcs-uploadfit-logo.jpg` using contain scaling on transparent canvases. It does not crop, stretch, recolour, or rewrite the source JPEG.
 
