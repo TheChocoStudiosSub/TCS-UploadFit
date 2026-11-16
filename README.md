@@ -53,6 +53,3 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 The output is written to `dist/msix/`. The script creates an unsigned `.msix` and a `.msixupload` ZIP containing that package. No `.appxsym` file is included, so Partner Center crash-symbol analysis is not available for this build. Do not add a private signing certificate for a Microsoft Store submission. The full build and Partner Center steps are in [docs/MSIX-BUILD.md](docs/MSIX-BUILD.md).
 
-## Planned Pro edition
-
-The current release remains free. Payment, accounts, licences, and Pro locks are not included. See [docs/PRO-ROADMAP.md](docs/PRO-ROADMAP.md) for possible later features and price positioning.
