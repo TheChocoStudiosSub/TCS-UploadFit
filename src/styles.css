@@ -193,3 +193,5 @@ a{color:inherit}
 .dropzone:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
 
 .file-text{min-width:0}
+
+.choco-ai-link{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border:1px solid var(--line-strong);border-radius:4px;color:var(--ink);font-size:10px;font-weight:700;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}.choco-ai-link:hover{background:var(--ink);color:#fff;border-color:var(--ink)}@media(max-width:620px){.choco-ai-link{padding:6px 8px;font-size:9px}.masthead-meta{gap:8px}}
