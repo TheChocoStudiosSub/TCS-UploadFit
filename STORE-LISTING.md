@@ -74,7 +74,7 @@ The Store edition processes selected image files locally in the Windows app pack
 
 The app requires Microsoft Edge WebView2 Runtime as a Windows component. The runtime is not used as a remote image-processing service. No network connection is required for the image-preparation workflow after the app and runtime are installed.
 
-Dukungan: thechocostudio@gmail.com
+Dukungan: thechocostudios@gmail.com
 
 ## Screenshots to capture
 
