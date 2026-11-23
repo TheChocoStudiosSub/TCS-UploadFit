@@ -49,5 +49,29 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "tcs-uploadfit.vercel.app"
+        }
+      ],
+      "destination": "https://uploadfit.thechocostudios.bond/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "tcs-uploadfit-privacy.vercel.app"
+        }
+      ],
+      "destination": "https://privacy-uploadfit.thechocostudios.bond/:path*",
+      "permanent": true
+    }
   ]
 }
