@@ -39,7 +39,7 @@ The web build outputs are written to `dist/demo` and `dist/store`. The demo and 
 
 The logo source path is `assets/tcs-uploadfit-logo.jpg`. Keep the original 1408 × 768 owner-supplied image at that exact path. The Store asset generator checks those dimensions and stops rather than creating icons from a wrong-sized replacement. It then creates padded contain versions without modifying the source.
 
-The Store release is built as an x64 MSIX, not as an EXE installer:
+The Store release is built as x64 and x86 MSIX packages, not as an EXE installer:
 
 1. Install the .NET 10 SDK, Windows 10 SDK (for MakeAppx.exe), and Microsoft Edge WebView2 Runtime.
 2. The repository already includes `packaging/partner-center.identity.json` with the Product identity values supplied by the owner.
