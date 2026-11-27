@@ -28,7 +28,7 @@ const BUILT_IN = {
 function storageGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function storageSet(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } }
 
-let language = storageGet(STORAGE.language) || (navigator.language?.toLowerCase().startsWith('id') ? 'id' : 'en');
+let language = storageGet(STORAGE.language) || 'id';
 let queue = [];
 let selectedId = null;
 let processing = false;
